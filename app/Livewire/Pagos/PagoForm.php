@@ -88,6 +88,10 @@ class PagoForm extends Component
 
         if ($cliente) {
             $this->cliente_id = $cliente->id;
+            // Llamar explícitamente para cargar las facturas
+            $this->updatedClienteId();
+            // Limpiar el campo de búsqueda
+            $this->buscarClientePorDocumento = '';
         } else {
             session()->flash('error', 'No se encontró cliente con la cédula: ' . $this->buscarClientePorDocumento);
         }

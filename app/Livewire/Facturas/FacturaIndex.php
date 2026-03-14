@@ -234,10 +234,85 @@ class FacturaIndex extends Component
             ]);
 
             session()->flash('message', "Factura {$factura->numero_factura} anulada exitosamente");
-            $this->actualizarLista();
+            
+            // Forzar refresh completo de la vista para asegurar que se muestre el estado correcto
+            $this->resetPage();
+            $this->dispatch('facturaActualizada');
+            
+            // También forzar un redirect para refresh completo si es necesario
+            return redirect()->to(request()->header('Referer') ?: route('facturas.index'));
 
         } catch (\Exception $e) {
             session()->flash('error', 'Error al anular factura: ' . $e->getMessage());
+        }
+    }
+
+    public function verFactura($facturaId)
+    {
+        try {
+            $factura = \App\Models\Factura::find($facturaId);
+            
+            if (!$factura) {
+                session()->flash('error', 'Factura no encontrada');
+                return;
+            }
+            
+            // Verificar que el usuario tenga acceso a la factura
+            if ($factura->empresa_id !== Auth::user()->empresa_id) {
+                session()->flash('error', 'No tiene permisos para acceder a esta factura');
+                return;
+            }
+            
+            // Redirigir a la vista de detalle
+            return redirect()->route('facturas.ver', $factura->id);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al ver factura: ' . $e->getMessage());
+        }
+    }
+
+    public function imprimirFactura($facturaId)
+    {
+        try {
+            $factura = \App\Models\Factura::find($facturaId);
+            
+            if (!$factura) {
+                session()->flash('error', 'Factura no encontrada');
+                return;
+            }
+            
+            // Verificar que el usuario tenga acceso a la factura
+            if ($factura->empresa_id !== Auth::user()->empresa_id) {
+                session()->flash('error', 'No tiene permisos para acceder a esta factura');
+                return;
+            }
+            
+            // Redirigir a la vista de impresión
+            return redirect()->route('facturas.imprimir', $factura->id);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al imprimir factura: ' . $e->getMessage());
+        }
+    }
+    
+    public function descargarPdf($facturaId)
+    {
+        try {
+            $factura = \App\Models\Factura::find($facturaId);
+            
+            if (!$factura) {
+                session()->flash('error', 'Factura no encontrada');
+                return;
+            }
+            
+            // Verificar que el usuario tenga acceso a la factura
+            if ($factura->empresa_id !== Auth::user()->empresa_id) {
+                session()->flash('error', 'No tiene permisos para acceder a esta factura');
+                return;
+            }
+            
+            // Redirigir al PDF
+            return redirect()->route('facturas.pdf', $factura->id);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar PDF: ' . $e->getMessage());
         }
     }
 

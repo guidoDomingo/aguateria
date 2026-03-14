@@ -49,12 +49,29 @@ class FacturacionService
                 $montoTotal = 0;
                 
                 foreach ($clientes as $cliente) {
-                    // Verificar si ya tiene factura para este período
+                    // Verificar si ya tiene factura activa para este período
+                    // Excluye anuladas y consolidadas (estas últimas ya fueron absorbidas por otras facturas)
                     $facturaExistente = Factura::where('cliente_id', $cliente->id)
                                               ->where('periodo_id', $periodo->id)
+                                              ->whereNotIn('estado', ['anulado', 'consolidado'])
                                               ->first();
+
+                    // Verificar si el cliente tiene facturas pagadas en períodos posteriores
+                    $tieneFacturasPagadasPosteriores = Factura::where('cliente_id', $cliente->id)
+                        ->whereHas('periodo', function($query) use ($año, $mes, $empresaId) {
+                            $query->where('empresa_id', $empresaId ?? 1)
+                                  ->where(function($q) use ($año, $mes) {
+                                      $q->where('año', '>', $año)
+                                        ->orWhere(function($subQuery) use ($año, $mes) {
+                                            $subQuery->where('año', '=', $año)
+                                                     ->where('mes', '>', $mes);
+                                        });
+                                  });
+                        })
+                        ->where('estado', 'pagado')
+                        ->exists();
                     
-                    if (!$facturaExistente) {
+                    if (!$facturaExistente && !$tieneFacturasPagadasPosteriores) {
                         try {
                             $factura = $this->generarFacturaParaClienteConAcumulacion($cliente, $periodo, []);
                             $facturasGeneradas++;
@@ -584,15 +601,39 @@ class FacturacionService
                     ];
                 }
 
-                // Verificar si ya existe factura para este cliente/período
+                // Verificar si ya existe factura activa para este cliente/período
+                // Excluye anuladas y consolidadas (estas últimas ya fueron absorbidas por otras facturas)
                 $facturaExistente = Factura::where('cliente_id', $cliente->id)
                                           ->where('periodo_id', $periodo->id)
+                                          ->whereNotIn('estado', ['anulado', 'consolidado'])
                                           ->first();
 
                 if ($facturaExistente) {
                     return [
                         'success' => false,
-                        'message' => 'Ya existe una factura para este cliente en el período seleccionado'
+                        'message' => 'Ya existe una factura activa para este cliente en el período seleccionado'
+                    ];
+                }
+
+                // Verificar si el cliente tiene facturas pagadas en períodos posteriores
+                $tieneFacturasPagadasPosteriores = Factura::where('cliente_id', $cliente->id)
+                    ->whereHas('periodo', function($query) use ($periodo) {
+                        $query->where('empresa_id', $periodo->empresa_id)
+                              ->where(function($q) use ($periodo) {
+                                  $q->where('año', '>', $periodo->año)
+                                    ->orWhere(function($subQuery) use ($periodo) {
+                                        $subQuery->where('año', '=', $periodo->año)
+                                                 ->where('mes', '>', $periodo->mes);
+                                    });
+                              });
+                    })
+                    ->where('estado', 'pagado')
+                    ->exists();
+
+                if ($tieneFacturasPagadasPosteriores) {
+                    return [
+                        'success' => false,
+                        'message' => 'No se puede generar factura de un período anterior cuando el cliente ya tiene facturas pagadas de períodos posteriores'
                     ];
                 }
 

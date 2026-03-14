@@ -69,6 +69,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/facturas/{facturaId}/edit', \App\Livewire\Facturas\FacturaForm::class)
         ->name('facturas.edit');
     
+    // Facturas - Vistas y PDFs
+    Route::get('/facturas/{factura}/ver', [\App\Http\Controllers\FacturaController::class, 'ver'])
+        ->name('facturas.ver');
+        
+    Route::get('/facturas/{factura}/pdf', [\App\Http\Controllers\FacturaController::class, 'generarPdf'])
+        ->name('facturas.pdf');
+        
+    Route::get('/facturas/{factura}/imprimir', [\App\Http\Controllers\FacturaController::class, 'imprimir'])
+        ->name('facturas.imprimir');
+    
     // Pagos
     Route::get('/pagos', \App\Livewire\Pagos\PagoIndex::class)
         ->name('pagos.index');

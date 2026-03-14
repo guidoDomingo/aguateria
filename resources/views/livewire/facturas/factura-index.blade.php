@@ -324,14 +324,22 @@
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex items-center justify-end space-x-2">
                                     <!-- Ver/Imprimir -->
-                                    <a href="#" title="Ver factura" class="text-blue-600 hover:text-blue-900">
+                                    <button wire:click="verFactura({{ $factura->id }})" 
+                                            title="Ver factura" class="text-blue-600 hover:text-blue-900">
                                         <i class="fas fa-eye"></i>
-                                    </a>
+                                    </button>
                                     
                                     <!-- PDF -->
-                                    <a href="#" title="Descargar PDF" class="text-green-600 hover:text-green-900">
+                                    <button wire:click="descargarPdf({{ $factura->id }})" 
+                                            title="Descargar PDF" class="text-green-600 hover:text-green-900">
                                         <i class="fas fa-file-pdf"></i>
-                                    </a>
+                                    </button>
+                                    
+                                    <!-- Imprimir -->
+                                    <button wire:click="imprimirFactura({{ $factura->id }})" 
+                                            title="Imprimir factura" class="text-purple-600 hover:text-purple-900">
+                                        <i class="fas fa-print"></i>
+                                    </button>
                                     
                                     @if($factura->estado !== 'pagado' && $factura->estado !== 'anulado')
                                         <!-- Editar -->
