@@ -122,14 +122,17 @@ class PagoIndex extends Component
 
         try {
             $pagoService = app(PagoService::class);
-            $resultado = $pagoService->anularPago($this->pagoSeleccionado, Auth::id(), 'Anulación desde interfaz');
+            $pago = \App\Models\Pago::find($this->pagoSeleccionado);
             
-            if ($resultado['success']) {
-                session()->flash('message', $resultado['message']);
-                $this->actualizarLista();
-            } else {
-                session()->flash('error', $resultado['message']);
+            if (!$pago) {
+                session()->flash('error', 'Pago no encontrado');
+                return;
             }
+            
+            $pagoService->anular($pago, 'Anulación desde interfaz');
+            
+            session()->flash('message', 'Pago anulado correctamente');
+            $this->actualizarLista();
         } catch (\Exception $e) {
             session()->flash('error', 'Error al anular pago: ' . $e->getMessage());
         } finally {
@@ -145,8 +148,62 @@ class PagoIndex extends Component
 
     public function imprimirRecibo($pagoId)
     {
-        // Aquí se implementaría la lógica para generar el PDF del recibo
-        session()->flash('message', 'Funcionalidad de impresión en desarrollo');
+        try {
+            $pago = \App\Models\Pago::with(['recibo', 'cliente'])->find($pagoId);
+            
+            if (!$pago) {
+                session()->flash('error', 'Pago no encontrado');
+                return;
+            }
+            
+            // Verificar que el usuario tenga acceso al pago
+            if ($pago->cliente->empresa_id !== Auth::user()->empresa_id) {
+                session()->flash('error', 'No tiene permisos para acceder a este recibo');
+                return;
+            }
+            
+            // Si no existe recibo, generarlo
+            if (!$pago->recibo) {
+                $pagoService = app(\App\Services\PagoService::class);
+                $pagoService->generarRecibo($pago);
+                $pago->refresh(); // Recargar el pago con el nuevo recibo
+            }
+            
+            // Redirigir a la vista de impresión
+            return redirect()->route('recibos.imprimir', $pago->recibo->id);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar recibo: ' . $e->getMessage());
+        }
+    }
+    
+    public function descargarPdf($pagoId)
+    {
+        try {
+            $pago = \App\Models\Pago::with(['recibo', 'cliente'])->find($pagoId);
+            
+            if (!$pago) {
+                session()->flash('error', 'Pago no encontrado');
+                return;
+            }
+            
+            // Verificar que el usuario tenga acceso al pago
+            if ($pago->cliente->empresa_id !== Auth::user()->empresa_id) {
+                session()->flash('error', 'No tiene permisos para acceder a este recibo');
+                return;
+            }
+            
+            // Si no existe recibo, generarlo
+            if (!$pago->recibo) {
+                $pagoService = app(\App\Services\PagoService::class);
+                $pagoService->generarRecibo($pago);
+                $pago->refresh(); // Recargar el pago con el nuevo recibo
+            }
+            
+            // Redirigir al PDF
+            return redirect()->route('recibos.pdf', $pago->recibo->id);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al generar PDF: ' . $e->getMessage());
+        }
     }
 
     public function render()

@@ -2,8 +2,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Registrar Pago</h1>
-            <p class="text-gray-600">Registra un nuevo pago y aplicalo a las facturas del cliente</p>
+            <h1 class="text-2xl font-bold text-gray-900">💸 Registrar Pago</h1>
+            <p class="text-gray-600">Proceso simplificado para registrar pagos de clientes</p>
         </div>
         <button wire:click="cancelar" 
                 class="text-gray-600 hover:text-gray-800">
@@ -106,16 +106,19 @@
                             <!-- Monto -->
                             <div>
                                 <label for="monto" class="block text-sm font-medium text-gray-700 mb-2">
-                                    💰 Monto Total Recibido del Cliente *
+                                    Monto Recibido del Cliente
                                 </label>
-                                <input wire:model.blur="monto" 
-                                       id="monto" 
-                                       type="number" 
-                                       step="1" 
-                                       min="0"
-                                       placeholder="Ej: 25000"
-                                       class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 @error('monto') border-red-300 focus:border-red-500 focus:ring-red-500 @enderror">
-                                <p class="mt-1 text-xs text-gray-500">💡 Este es el dinero total que recibió del cliente. Luego distribuya este monto entre las facturas pendientes.</p>
+                                <div class="relative">
+                                    <input wire:model.blur="monto" 
+                                           id="monto" 
+                                           type="number" 
+                                           step="1" 
+                                           min="0"
+                                           placeholder="Opcional - para calcular vuelto"
+                                           class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 pr-12 @error('monto') border-red-300 focus:border-red-500 focus:ring-red-500 @enderror">
+                                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">Gs.</span>
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">💡 Opcional: Ingrese el dinero recibido del cliente para calcular el vuelto</p>
                                 @error('monto')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -193,12 +196,11 @@
                 <!-- Facturas del Cliente -->
                 @if(!empty($facturasCliente))
                 <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-                    <div class="border-b border-gray-200 bg-gray-50 px-6 py-3">
+                    <div class="border-b border-gray-200 bg-blue-50 px-6 py-3">
                         <h3 class="text-lg font-medium text-gray-900">
-                            <i class="fas fa-file-invoice mr-2"></i>
-                            📋 Distribución del Pago ({{ count($facturasCliente) }} facturas pendientes)
+                            Facturas a Pagar ({{ count($facturasCliente) }} pendientes)
                         </h3>
-                        <p class="text-sm text-gray-600 mt-1">🎯 Distribuya el monto recibido entre estas facturas pendientes. El total distribuido debe coincidir con el monto recibido.</p>
+                        <p class="text-sm text-blue-700 mt-1">Marque las facturas que desea pagar. Se aplicará el monto completo pendiente de cada factura.</p>
                     </div>
                     <div class="p-6">
                         <div class="overflow-x-auto">
@@ -223,14 +225,11 @@
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                                             Pendiente
                                         </th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                            💸 Monto a Aplicar
-                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
                                     @foreach($facturasCliente as $index => $factura)
-                                        <tr class="{{ $factura['esta_vencida'] ? 'bg-red-50' : '' }}">
+                                        <tr class="{{ $factura['esta_vencida'] ? 'bg-red-50' : ($factura['seleccionada'] ? 'bg-blue-50' : '') }}">
                                             <td class="px-4 py-3">
                                                 <input type="checkbox" 
                                                        wire:click="toggleFactura({{ $index }}, $event.target.checked)"
@@ -255,26 +254,15 @@
                                                 {{ number_format($factura['total'], 0, ',', '.') }} Gs.
                                             </td>
                                             <td class="px-4 py-3">
-                                                <span class="text-sm font-medium text-red-600">
+                                                <span class="text-sm font-medium {{ $factura['seleccionada'] ? 'text-green-600' : 'text-red-600' }}">
                                                     {{ number_format($factura['pendiente'], 0, ',', '.') }} Gs.
                                                 </span>
-                                            </td>
-                                            <td class="px-4 py-3">
-                                                <div class="flex flex-col">
-                                                    <input type="number" 
-                                                           wire:model.blur="facturasCliente.{{ $index }}.monto_a_pagar"
-                                                           wire:change="updatedFacturasMonto($event.target.value, 'facturas.{{ $index }}.monto_a_pagar')"
-                                                           min="0" 
-                                                           max="{{ $factura['pendiente'] }}"
-                                                           step="1"
-                                                           placeholder="0"
-                                                           class="w-24 rounded border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm">
-                                                    <button type="button" 
-                                                            wire:click="aplicarMontoCompleto({{ $index }})"
-                                                            class="text-xs text-blue-600 hover:text-blue-800 mt-1">
-                                                        Aplicar todo
-                                                    </button>
-                                                </div>
+                                                @if($factura['seleccionada'])
+                                                    <div class="text-xs text-green-600 mt-1">
+                                                        <i class="fas fa-check-circle mr-1"></i>
+                                                        Aplicar completo
+                                                    </div>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
@@ -299,14 +287,15 @@
                                 Cancelar
                             </button>
                             <button type="submit" 
-                                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                                    {{ $cargando ? 'disabled' : '' }}>
+                                    style="background-color: #16a34a !important;"
+                                    class="px-8 py-3 text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-lg font-semibold"
+                                    {{ $cargando || count($facturasSeleccionadas) == 0 ? 'disabled' : '' }}>
                                 @if($cargando)
-                                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                    Procesando...
+                                    <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                    Procesando Pago...
                                 @else
-                                    <i class="fas fa-save mr-2"></i>
-                                    Registrar Pago
+                                    <i class="fas fa-check-circle mr-2"></i>
+                                    Confirmar Pago
                                 @endif
                             </button>
                         </div>
@@ -317,10 +306,10 @@
             <!-- Resumen Lateral -->
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-lg shadow-sm border overflow-hidden sticky top-6">
-                    <div class="border-b border-gray-200 bg-gray-50 px-6 py-3">
+                    <div class="border-b border-gray-200 bg-blue-50 px-6 py-3">
                         <h3 class="text-lg font-medium text-gray-900">
                             <i class="fas fa-calculator mr-2"></i>
-                            Resumen del Pago
+                            Resumen
                         </h3>
                     </div>
                     
@@ -328,40 +317,53 @@
                         <div class="p-6">
                             <!-- Información del Cliente -->
                             <div class="mb-4 pb-4 border-b border-gray-200">
-                                <h4 class="font-medium text-gray-900 mb-2">👤 Cliente</h4>
+                                <h4 class="font-medium text-gray-900 mb-2">Cliente</h4>
                                 <div class="text-sm text-gray-600">
-                                    <p>{{ $cliente->nombre }} {{ $cliente->apellido }}</p>
-                                    <p>{{ $cliente->cedula }}</p>
+                                    <p class="font-medium">{{ $cliente->nombre }} {{ $cliente->apellido }}</p>
+                                    <p>CI: {{ $cliente->cedula }}</p>
                                 </div>
                             </div>
 
                             <!-- Cálculos del Pago -->
                             <div class="space-y-3">
+                                <div class="bg-blue-50 p-3 rounded-lg border">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-700 font-medium">💰 Total a Pagar:</span>
+                                        <span class="font-bold text-xl text-blue-700">{{ number_format($montoTotal, 0, ',', '.') }} Gs.</span>
+                                    </div>
+                                </div>
+
                                 <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">💰 Monto Recibido:</span>
+                                    <span class="text-gray-600">Recibido del Cliente:</span>
                                     <span class="font-medium">{{ number_format(floatval($monto), 0, ',', '.') }} Gs.</span>
                                 </div>
 
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">📊 Distribuido en Facturas:</span>
-                                    <span class="font-medium text-blue-600">{{ number_format($montoTotal, 0, ',', '.') }} Gs.</span>
-                                </div>
-
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">{{ $montoRestante < 0 ? '⚠️ Exceso:' : ($montoRestante > 0 ? '💸 Por Distribuir:' : '✅ Balance:') }}</span>
-                                    <span class="font-medium {{ $montoRestante < 0 ? 'text-red-600' : ($montoRestante > 0 ? 'text-orange-600' : 'text-green-600') }}">
-                                        {{ number_format(abs($montoRestante), 0, ',', '.') }} Gs.
-                                    </span>
-                                </div>
-
-                                @if($montoRestante != 0)
-                                    <div class="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                                        @if($montoRestante > 0)
-                                            💡 Aún puede distribuir {{ number_format($montoRestante, 0, ',', '.') }} Gs. adicionales
-                                        @else
-                                            ⚠️ Ha excedido el monto recibido en {{ number_format(abs($montoRestante), 0, ',', '.') }} Gs.
-                                        @endif
+                                @if(floatval($monto) > 0)
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600">{{ $montoRestante < 0 ? '❌ Falta:' : ($montoRestante > 0 ? '💸 Vuelto a Dar:' : '✅ Exacto:') }}</span>
+                                        <span class="font-medium {{ $montoRestante < 0 ? 'text-red-600' : ($montoRestante > 0 ? 'text-green-600' : 'text-gray-600') }}">
+                                            {{ number_format(abs($montoRestante), 0, ',', '.') }} Gs.
+                                        </span>
                                     </div>
+                                @endif
+
+                                @if(count($facturasSeleccionadas) > 0)
+                                    @if($montoRestante > 0)
+                                        <div class="text-xs p-3 rounded bg-green-50 text-green-700 border border-green-200">
+                                            <i class="fas fa-money-bill-wave mr-1"></i>
+                                            <strong>Devolver {{ number_format($montoRestante, 0, ',', '.') }} Gs.</strong> al cliente
+                                        </div>
+                                    @elseif($montoRestante < 0)
+                                        <div class="text-xs p-3 rounded bg-red-50 text-red-700 border border-red-200">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                                            <strong>Faltan {{ number_format(abs($montoRestante), 0, ',', '.') }} Gs.</strong> del cliente
+                                        </div>
+                                    @else
+                                        <div class="text-xs p-3 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                                            <i class="fas fa-check-circle mr-1"></i>
+                                            <strong>Pago exacto</strong> - Sin vuelto
+                                        </div>
+                                    @endif
                                 @endif
 
                                 <hr class="my-3">
@@ -372,40 +374,17 @@
                                 </div>
                             </div>
 
-                            <!-- Alertas -->
-                            @if($montoRestante < 0)
-                                <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                    <div class="flex">
-                                        <i class="fas fa-exclamation-triangle text-red-400 mr-2 mt-0.5"></i>
-                                        <div class="text-sm text-red-700">
-                                            <p class="font-medium">Monto insuficiente</p>
-                                            <p>El monto del pago es menor al total de las facturas seleccionadas.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            @elseif($montoRestante > 0 && count($facturasSeleccionadas) > 0)
-                                <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                    <div class="flex">
-                                        <i class="fas fa-info-circle text-yellow-400 mr-2 mt-0.5"></i>
-                                        <div class="text-sm text-yellow-700">
-                                            <p class="font-medium">Pago parcial</p>
-                                            <p>Quedará un saldo a favor del cliente.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-
                             <!-- Lista de facturas seleccionadas -->
                             @if(count($facturasSeleccionadas) > 0)
                                 <div class="mt-4 pt-4 border-t border-gray-200">
                                     <h4 class="font-medium text-gray-900 mb-2">Facturas a Pagar</h4>
-                                    <div class="space-y-2">
+                                    <div class="space-y-1 max-h-40 overflow-y-auto">
                                         @foreach($facturasSeleccionadas as $factura)
                                             @php
                                                 $facturaData = collect($facturasCliente)->firstWhere('id', $factura['factura_id']);
                                             @endphp
                                             @if($facturaData)
-                                                <div class="flex justify-between text-xs">
+                                                <div class="flex justify-between text-xs py-1">
                                                     <span class="text-gray-600">#{{ $facturaData['numero'] }}</span>
                                                     <span class="font-medium">{{ number_format($factura['monto'], 0, ',', '.') }} Gs.</span>
                                                 </div>
@@ -427,6 +406,51 @@
     </form>
 
     <!-- Mensajes Flash -->
+    @if (session()->has('pago_exitoso'))
+        <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" 
+             x-data="{ show: true }" 
+             x-show="show" 
+             x-init="setTimeout(() => show = false, 8000)">
+            <div class="bg-white rounded-lg shadow-xl p-8 max-w-md mx-4 text-center">
+                <div class="mb-4">
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                        <i class="fas fa-check text-green-600 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">¡Pago Registrado!</h3>
+                    @php $pagoData = session('pago_exitoso'); @endphp
+                    <p class="text-gray-600 mb-4">{{ $pagoData['mensaje'] }}</p>
+                    
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-sm">
+                        <div class="space-y-1">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Cliente:</span>
+                                <span class="font-medium">{{ $pagoData['cliente'] }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Monto:</span>
+                                <span class="font-medium text-green-600">{{ $pagoData['monto'] }} Gs.</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Fecha:</span>
+                                <span class="font-medium">{{ $pagoData['fecha'] }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Facturas:</span>
+                                <span class="font-medium">{{ $pagoData['facturas'] }} aplicadas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button @click="show = false" 
+                        class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    <i class="fas fa-check mr-2"></i>
+                    Entendido
+                </button>
+            </div>
+        </div>
+    @endif
+
     @if (session()->has('message'))
         <div class="fixed top-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded" 
              x-data="{ show: true }" 

@@ -33,11 +33,21 @@ class PagoForm extends Component
 
     protected $rules = [
         'cliente_id' => 'required|exists:clientes,id',
-        'monto' => 'required|numeric|min:1',
+        'monto' => 'nullable|numeric|min:0', // Ahora es opcional, solo para calcular vuelto
         'metodo_pago_id' => 'required|exists:metodos_pago,id',
         'cobrador_id' => 'required|exists:cobradores,id',
         'fecha_pago' => 'required|date|before_or_equal:today',
         'observaciones' => 'nullable|string|max:500'
+    ];
+
+    protected $messages = [
+        'cliente_id.required' => 'Debe seleccionar un cliente',
+        'monto.numeric' => 'El monto debe ser un número válido',
+        'monto.min' => 'El monto debe ser mayor o igual a 0',
+        'metodo_pago_id.required' => 'Debe seleccionar un método de pago',
+        'cobrador_id.required' => 'Debe seleccionar un cobrador',
+        'fecha_pago.required' => 'La fecha de pago es obligatoria',
+        'fecha_pago.before_or_equal' => 'La fecha no puede ser futura'
     ];
 
     protected $validationAttributes = [
@@ -154,82 +164,28 @@ class PagoForm extends Component
 
     public function toggleFactura($facturaIndex, $seleccionada)
     {
-        \Log::info('Toggling factura', [
-            'factura_index' => $facturaIndex,
-            'seleccionada' => $seleccionada
-        ]);
-        
         if (isset($this->facturasCliente[$facturaIndex])) {
             $this->facturasCliente[$facturaIndex]['seleccionada'] = $seleccionada;
             
             if ($seleccionada) {
-                // Auto-completar con el monto pendiente
+                // Siempre aplicar el monto completo pendiente
                 $this->facturasCliente[$facturaIndex]['monto_a_pagar'] = $this->facturasCliente[$facturaIndex]['pendiente'];
             } else {
                 $this->facturasCliente[$facturaIndex]['monto_a_pagar'] = 0;
             }
             
-            \Log::info('Factura toggled', [
-                'factura_id' => $this->facturasCliente[$facturaIndex]['id'],
-                'monto_a_pagar' => $this->facturasCliente[$facturaIndex]['monto_a_pagar']
-            ]);
-            
             $this->actualizarMontos();
         }
     }
 
-    public function aplicarMontoCompleto($facturaIndex)
-    {
-        if (isset($this->facturasCliente[$facturaIndex])) {
-            $this->facturasCliente[$facturaIndex]['seleccionada'] = true;
-            $this->facturasCliente[$facturaIndex]['monto_a_pagar'] = $this->facturasCliente[$facturaIndex]['pendiente'];
-            $this->actualizarMontos();
-        }
-    }
 
-    public function updatedFacturasMonto($value, $key)
-    {
-        \Log::info('Updating facturas monto', [
-            'value' => $value,
-            'key' => $key
-        ]);
-        
-        // $key será algo como "facturas.0.monto_a_pagar"
-        $parts = explode('.', $key);
-        $index = $parts[1];
-        
-        if (isset($this->facturasCliente[$index])) {
-            $factura = &$this->facturasCliente[$index];
-            $monto = floatval($value);
-            
-            // Validar que no exceda el monto pendiente
-            if ($monto > $factura['pendiente']) {
-                $factura['monto_a_pagar'] = $factura['pendiente'];
-            } else if ($monto < 0) {
-                $factura['monto_a_pagar'] = 0;
-            } else {
-                $factura['monto_a_pagar'] = $monto;
-            }
-            
-            // Auto-seleccionar si hay monto
-            $factura['seleccionada'] = $factura['monto_a_pagar'] > 0;
-            
-            \Log::info('Updated monto for factura', [
-                'factura_id' => $factura['id'],
-                'new_monto' => $factura['monto_a_pagar'],
-                'seleccionada' => $factura['seleccionada']
-            ]);
-            
-            $this->actualizarMontos();
-        }
-    }
 
     public function actualizarMontos()
     {
         $this->montoTotal = 0;
         $this->facturasSeleccionadas = [];
 
-        foreach ($this->facturasCliente as $index => $factura) {
+        foreach ($this->facturasCliente as $factura) {
             if ($factura['seleccionada'] && $factura['monto_a_pagar'] > 0) {
                 $this->montoTotal += $factura['monto_a_pagar'];
                 $this->facturasSeleccionadas[] = [
@@ -239,17 +195,8 @@ class PagoForm extends Component
             }
         }
 
-        // Actualizar monto del pago
-        $this->monto = $this->montoTotal;
+        // Calcular el sobrante/faltante
         $this->montoRestante = floatval($this->monto) - $this->montoTotal;
-        
-        // Debug log
-        \Log::info('Montos actualizados', [
-            'facturas_cliente_count' => count($this->facturasCliente),
-            'facturas_seleccionadas_count' => count($this->facturasSeleccionadas),
-            'monto_total' => $this->montoTotal,
-            'monto_pago' => $this->monto
-        ]);
     }
 
     public function updatedMonto()
@@ -275,21 +222,18 @@ class PagoForm extends Component
 
             // Validar que haya facturas seleccionadas
             if (empty($this->facturasSeleccionadas)) {
-                $this->addError('facturas', 'Debe seleccionar al menos una factura para aplicar el pago');
+                $this->addError('facturas', 'Debe seleccionar al menos una factura para procesar el pago');
                 return;
             }
 
-            // Validar que el monto sea suficiente
-            if ($this->montoTotal > floatval($this->monto)) {
-                $this->addError('monto', 'El monto del pago no es suficiente para cubrir las facturas seleccionadas');
-                return;
-            }
+            // El pago es exacto a las facturas seleccionadas - no validar monto recibido
+            // El monto recibido es solo para calcular vuelto
 
             $pagoService = app(PagoService::class);
 
             $datos = [
                 'cliente_id' => $this->cliente_id,
-                'monto' => floatval($this->monto),
+                'monto' => $this->montoTotal, // Usar el monto exacto de las facturas
                 'metodo_pago_id' => $this->metodo_pago_id,
                 'cobrador_id' => $this->cobrador_id,
                 'fecha_pago' => $this->fecha_pago,
@@ -301,9 +245,28 @@ class PagoForm extends Component
             $resultado = $pagoService->registrarPago($datos, Auth::id());
 
             if ($resultado['success']) {
-                session()->flash('message', $resultado['message']);
+                // Formatear mensaje de éxito más claro
+                $cliente = Cliente::find($this->cliente_id);
+                $montoFormateado = number_format($this->montoTotal, 0, ',', '.');
+                $vuelto = floatval($this->monto) - $this->montoTotal;
+                
+                $mensajeExito = "¡Pago de {$montoFormateado} Gs. registrado exitosamente para {$cliente->nombre} {$cliente->apellido}!";
+                if ($vuelto > 0) {
+                    $vueltoFormateado = number_format($vuelto, 0, ',', '.');
+                    $mensajeExito .= " Vuelto: {$vueltoFormateado} Gs.";
+                }
+                
+                session()->flash('pago_exitoso', [
+                    'mensaje' => $mensajeExito,
+                    'cliente' => $cliente->nombre . ' ' . $cliente->apellido,
+                    'monto' => $montoFormateado,
+                    'vuelto' => $vuelto > 0 ? number_format($vuelto, 0, ',', '.') : null,
+                    'fecha' => \Carbon\Carbon::parse($this->fecha_pago)->format('d/m/Y'),
+                    'facturas' => count($this->facturasSeleccionadas)
+                ]);
+                
                 $this->dispatch('pagoActualizado');
-                return $this->redirect('/pagos', navigate: true);
+                return redirect('/pagos');
             } else {
                 session()->flash('error', $resultado['message']);
                 $this->addError('general', $resultado['message']);
@@ -325,7 +288,7 @@ class PagoForm extends Component
 
     public function cancelar()
     {
-        return redirect()->route('pagos.index');
+        return redirect('/pagos');
     }
 
     public function render()

@@ -76,6 +76,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pagos/create', \App\Livewire\Pagos\PagoForm::class)
         ->name('pagos.create');
     
+    // Recibos
+    Route::get('/recibos/{recibo}/pdf', [\App\Http\Controllers\ReciboController::class, 'generarPdf'])
+        ->name('recibos.pdf');
+        
+    Route::get('/recibos/{recibo}/imprimir', [\App\Http\Controllers\ReciboController::class, 'imprimir'])
+        ->name('recibos.imprimir');
+    
     // Cobradores
     Route::get('/cobradores', \App\Livewire\Cobradores\CobradorIndex::class)
         ->name('cobradores.index');
