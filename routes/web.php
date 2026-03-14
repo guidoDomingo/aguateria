@@ -1,0 +1,157 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Livewire\Dashboard;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
+
+Route::view('/', 'welcome');
+
+// Dashboard - temporalmente sin middleware tenant para pruebas
+Route::get('/dashboard', Dashboard::class)
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
+
+// Ruta de prueba para verificar que el login funciona
+Route::get('/test-login', function() {
+    $user = auth()->user();
+    if ($user) {
+        return response()->json([
+            'logged_in' => true,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'tipo_usuario' => $user->tipo_usuario,
+                'empresa_id' => $user->empresa_id,
+                'empresa_nombre' => $user->empresa?->nombre ?? 'Sin empresa'
+            ]
+        ]);
+    }
+    
+    return response()->json(['logged_in' => false]);
+})->middleware(['auth']);
+
+// Profile routes
+Route::middleware(['auth'])->group(function () {
+    Route::view('profile', 'profile')->name('profile.edit');
+});
+
+// Rutas principales del sistema (temporalmente sin middleware tenant para desarrollo)
+Route::middleware(['auth'])->group(function () {
+    
+    // Clientes
+    Route::get('/clientes', \App\Livewire\Clientes\ClienteIndex::class)
+        ->name('clientes.index');
+    
+    Route::get('/clientes/create', \App\Livewire\Clientes\ClienteForm::class)
+        ->name('clientes.create');
+        
+    Route::get('/clientes/{clienteId}/edit', \App\Livewire\Clientes\ClienteForm::class)
+        ->name('clientes.edit');
+    
+    // Facturas
+    Route::get('/facturas', \App\Livewire\Facturas\FacturaIndex::class)
+        ->name('facturas.index');
+        
+    Route::get('/facturas/create', \App\Livewire\Facturas\FacturaForm::class)
+        ->name('facturas.create');
+        
+    Route::get('/facturas/{facturaId}/edit', \App\Livewire\Facturas\FacturaForm::class)
+        ->name('facturas.edit');
+    
+    // Pagos
+    Route::get('/pagos', \App\Livewire\Pagos\PagoIndex::class)
+        ->name('pagos.index');
+    
+    Route::get('/pagos/create', \App\Livewire\Pagos\PagoForm::class)
+        ->name('pagos.create');
+    
+    // Cobradores
+    Route::get('/cobradores', \App\Livewire\Cobradores\CobradorIndex::class)
+        ->name('cobradores.index');
+    
+    Route::get('/cobradores/crear', \App\Livewire\Cobradores\CobradorForm::class)
+        ->name('cobradores.crear');
+        
+    Route::get('/cobradores/{cobradorId}/editar', \App\Livewire\Cobradores\CobradorForm::class)
+        ->name('cobradores.editar');
+    
+    // Barrios
+    Route::get('/barrios', \App\Livewire\Barrios\BarrioIndex::class)
+        ->name('barrios.index');
+    
+    Route::get('/barrios/crear', \App\Livewire\Barrios\BarrioForm::class)
+        ->name('barrios.crear');
+        
+    Route::get('/barrios/{barrioId}/editar', \App\Livewire\Barrios\BarrioForm::class)
+        ->name('barrios.editar');
+    
+    // Tarifas
+    Route::get('/tarifas', \App\Livewire\Tarifas\TarifaIndex::class)
+        ->name('tarifas.index');
+    
+    Route::get('/tarifas/crear', \App\Livewire\Tarifas\TarifaForm::class)
+        ->name('tarifas.crear');
+        
+    Route::get('/tarifas/{tarifaId}/editar', \App\Livewire\Tarifas\TarifaForm::class)
+        ->name('tarifas.editar');
+    
+    // Zonas
+    Route::get('/zonas', \App\Livewire\Zonas\ZonaIndex::class)
+        ->name('zonas.index');
+    
+    Route::get('/zonas/crear', \App\Livewire\Zonas\ZonaForm::class)
+        ->name('zonas.crear');
+        
+    Route::get('/zonas/{zonaId}/editar', \App\Livewire\Zonas\ZonaForm::class)
+        ->name('zonas.editar');
+    
+    // Cortes y Reconexiones
+    Route::get('/cortes', function() {
+        return view('coming-soon', ['module' => 'Cortes y Reconexiones']);
+    })->name('cortes.index');
+    
+    // Cobranza
+    Route::get('/cobranza', function() {
+        return view('coming-soon', ['module' => 'Gestión de Cobranza']);
+    })->name('cobranza.index');
+    
+    // Reportes
+    Route::get('/reportes', function() {
+        return view('coming-soon', ['module' => 'Reportes']);
+    })->name('reportes.index');
+    
+    // Configuración (solo para admin)
+    Route::middleware(['admin'])->group(function () {
+        Route::get('/configuracion', function() {
+            return view('coming-soon', ['module' => 'Configuración']);
+        })->name('configuracion.index');
+        
+        Route::get('/usuarios', function() {
+            return view('coming-soon', ['module' => 'Usuarios']);
+        })->name('usuarios.index');
+        
+        Route::get('/empresa/configuracion', function() {
+            return view('coming-soon', ['module' => 'Configuración de Empresa']);
+        })->name('empresa.configuracion');
+    });
+    
+    // Super Admin (solo para super admin)
+    Route::middleware(['super.admin'])->group(function () {
+        Route::get('/super/empresas', function() {
+            return view('coming-soon', ['module' => 'Gestión de Empresas']);
+        })->name('super.empresas');
+    });
+});
+
+require __DIR__.'/auth.php';
