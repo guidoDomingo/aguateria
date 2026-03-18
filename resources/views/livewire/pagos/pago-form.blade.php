@@ -160,7 +160,7 @@
                             <!-- Cobrador -->
                             <div>
                                 <label for="cobrador_id" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Cobrador *
+                                    Cobrador
                                 </label>
                                 <select wire:model.blur="cobrador_id" 
                                         id="cobrador_id" 

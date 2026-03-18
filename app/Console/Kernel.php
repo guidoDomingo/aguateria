@@ -12,7 +12,19 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Moras y avisos: corre diariamente al mediodía
+        $schedule->command('aguateria:aplicar-moras')
+                 ->dailyAt('12:00')
+                 ->withoutOverlapping()
+                 ->appendOutputTo(storage_path('logs/moras.log'));
+
+        // Facturación automática: corre cada minuto
+        // El comando internamente verifica si hoy es el día Y hora configurados por empresa
+        $schedule->command('aguateria:facturacion-automatica')
+                 ->everyMinute()
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->appendOutputTo(storage_path('logs/facturacion-automatica.log'));
     }
 
     /**

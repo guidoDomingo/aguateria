@@ -35,7 +35,7 @@ class PagoForm extends Component
         'cliente_id' => 'required|exists:clientes,id',
         'monto' => 'nullable|numeric|min:0', // Ahora es opcional, solo para calcular vuelto
         'metodo_pago_id' => 'required|exists:metodos_pago,id',
-        'cobrador_id' => 'required|exists:cobradores,id',
+        'cobrador_id' => 'nullable|exists:cobradores,id',
         'fecha_pago' => 'required|date|before_or_equal:today',
         'observaciones' => 'nullable|string|max:500'
     ];
@@ -45,7 +45,6 @@ class PagoForm extends Component
         'monto.numeric' => 'El monto debe ser un número válido',
         'monto.min' => 'El monto debe ser mayor o igual a 0',
         'metodo_pago_id.required' => 'Debe seleccionar un método de pago',
-        'cobrador_id.required' => 'Debe seleccionar un cobrador',
         'fecha_pago.required' => 'La fecha de pago es obligatoria',
         'fecha_pago.before_or_equal' => 'La fecha no puede ser futura'
     ];

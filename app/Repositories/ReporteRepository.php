@@ -224,23 +224,19 @@ class ReporteRepository
         $clientesActivos = Cliente::where('empresa_id', $empresaId)->where('estado', 'activo')->count();
         
         // Facturas del mes actual
-        $facturasMes = Factura::join('clientes', 'facturas.cliente_id', '=', 'clientes.id')
-            ->where('clientes.empresa_id', $empresaId)
-            ->whereRaw('DATE_FORMAT(facturas.fecha_emision, "%Y-%m") = ?', [$mesActual])
+        $facturasMes = Factura::where('empresa_id', $empresaId)
+            ->whereRaw('DATE_FORMAT(fecha_emision, "%Y-%m") = ?', [$mesActual])
             ->get();
-        
+
         // Pagos del mes actual
-        $pagosMes = Pago::join('facturas', 'pagos.factura_id', '=', 'facturas.id')
-            ->join('clientes', 'facturas.cliente_id', '=', 'clientes.id')
-            ->where('clientes.empresa_id', $empresaId)
-            ->whereRaw('DATE_FORMAT(pagos.fecha_pago, "%Y-%m") = ?', [$mesActual])
-            ->sum('pagos.monto');
-        
+        $pagosMes = Pago::where('empresa_id', $empresaId)
+            ->whereRaw('DATE_FORMAT(fecha_pago, "%Y-%m") = ?', [$mesActual])
+            ->sum('monto_pagado');
+
         // Facturas vencidas
-        $facturasVencidas = Factura::join('clientes', 'facturas.cliente_id', '=', 'clientes.id')
-            ->where('clientes.empresa_id', $empresaId)
-            ->where('facturas.fecha_vencimiento', '<', $hoy)
-            ->where('facturas.estado', '!=', 'pagada')
+        $facturasVencidas = Factura::where('empresa_id', $empresaId)
+            ->where('fecha_vencimiento', '<', $hoy)
+            ->where('estado', '!=', 'pagado')
             ->get();
 
         return [
@@ -251,15 +247,15 @@ class ReporteRepository
             ],
             'facturacion_mes' => [
                 'cantidad_facturas' => $facturasMes->count(),
-                'monto_facturado' => $facturasMes->sum('monto_total'),
+                'monto_facturado' => $facturasMes->sum('total'),
                 'monto_cobrado' => $pagosMes,
-                'porcentaje_cobranza' => $facturasMes->sum('monto_total') > 0 
-                    ? ($pagosMes / $facturasMes->sum('monto_total')) * 100 
+                'porcentaje_cobranza' => $facturasMes->sum('total') > 0
+                    ? ($pagosMes / $facturasMes->sum('total')) * 100
                     : 0
             ],
             'morosidad' => [
                 'facturas_vencidas' => $facturasVencidas->count(),
-                'monto_vencido' => $facturasVencidas->sum('monto_total'),
+                'monto_vencido' => $facturasVencidas->sum('total'),
                 'clientes_morosos' => $facturasVencidas->unique('cliente_id')->count()
             ]
         ];

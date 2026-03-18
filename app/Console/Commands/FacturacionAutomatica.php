@@ -15,9 +15,10 @@ class FacturacionAutomatica extends Command
      *
      * @var string
      */
-    protected $signature = 'aguateria:facturacion-automatica 
+    protected $signature = 'aguateria:facturacion-automatica
                             {--empresa= : ID de empresa específica (opcional)}
                             {--mes= : Mes a facturar (formato: YYYY-MM)}
+                            {--force : Forzar ejecución ignorando día y hora configurados}
                             {--dry-run : Simulación sin procesar}';
 
     /**
@@ -49,6 +50,11 @@ class FacturacionAutomatica extends Command
         $empresaId = $this->option('empresa');
         $mes = $this->option('mes');
         $dryRun = $this->option('dry-run');
+        $force = $this->option('force');
+
+        if ($force) {
+            $this->warn('MODO FORZADO - Se ignora la verificación de día y hora');
+        }
         
         if ($dryRun) {
             $this->warn('MODO SIMULACIÓN - No se procesarán las transacciones');
@@ -74,7 +80,7 @@ class FacturacionAutomatica extends Command
                 return 1;
             }
         } else {
-            $empresas = Empresa::where('estado', 'activa')->get();
+            $empresas = Empresa::whereIn('estado', ['activa', 'trial'])->get();
         }
         
         $this->info("Empresas a procesar: {$empresas->count()}");
@@ -90,8 +96,33 @@ class FacturacionAutomatica extends Command
         
         // Procesar cada empresa
         foreach ($empresas as $empresa) {
+            // Verificar si hoy es el día Y hora de facturación configurados (solo si no se especificó --mes ni --force)
+            if (!$mes && !$force) {
+                $configuraciones = $empresa->configuraciones ?? [];
+                $diaFacturacion  = (int) ($configuraciones['dia_facturacion'] ?? 1);
+                $horaFacturacion = $configuraciones['hora_facturacion'] ?? '00:05';
+                [$horaConfig, $minutoConfig] = explode(':', $horaFacturacion);
+
+                $ahora = now();
+                $hoy   = $ahora->day;
+
+                if ($hoy !== $diaFacturacion) {
+                    $this->line("⏭  {$empresa->nombre}: No es el día de facturación (día {$diaFacturacion}, hoy es {$hoy})");
+                    continue;
+                }
+
+                $horaAhora   = $ahora->format('H');
+                $minutoAhora = $ahora->format('i');
+
+                if ($horaAhora !== str_pad($horaConfig, 2, '0', STR_PAD_LEFT) ||
+                    $minutoAhora !== str_pad($minutoConfig, 2, '0', STR_PAD_LEFT)) {
+                    $this->line("⏭  {$empresa->nombre}: No es la hora de facturación ({$horaFacturacion}, ahora es {$horaAhora}:{$minutoAhora})");
+                    continue;
+                }
+            }
+
             $this->info("📊 Procesando: {$empresa->nombre}");
-            
+
             try {
                 $resultado = $this->procesarEmpresa($empresa, $año, $mesNumero, $dryRun);
                 

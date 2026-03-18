@@ -4,8 +4,6 @@ namespace App\Livewire\Facturas;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Services\FacturacionService;
-use App\Services\PeriodoFacturacionService;
 use App\Repositories\FacturaRepository;
 use App\Models\PeriodoFacturacion;
 use Illuminate\Support\Facades\Auth;
@@ -20,9 +18,6 @@ class FacturaIndex extends Component
     public $filtroPeriodo = '';
     public $filtroCliente = '';
     public $mostrarSoloVencidas = false;
-    public $periodoSeleccionado = null;
-    public $mostrarModalFacturacion = false;
-    public $procesandoFacturacion = false;
 
     protected $queryString = [
         'buscar' => ['except' => ''],
@@ -70,122 +65,6 @@ class FacturaIndex extends Component
         $this->filtroCliente = '';
         $this->mostrarSoloVencidas = false;
         $this->resetPage();
-    }
-
-    public function abrirModalFacturacion()
-    {
-        $this->mostrarModalFacturacion = true;
-    }
-
-    public function cerrarModalFacturacion()
-    {
-        $this->mostrarModalFacturacion = false;
-        $this->periodoSeleccionado = null;
-    }
-
-    public function procesarFacturacionMasiva()
-    {
-        if (!$this->periodoSeleccionado) {
-            session()->flash('error', 'Debe seleccionar un período para facturar');
-            return;
-        }
-
-        $this->procesandoFacturacion = true;
-
-        try {
-            // Obtener el período seleccionado
-            $periodo = PeriodoFacturacion::find($this->periodoSeleccionado);
-            
-            if (!$periodo) {
-                session()->flash('error', 'Período de facturación no encontrado');
-                return;
-            }
-
-            $facturacionService = app(FacturacionService::class);
-            $resultado = $facturacionService->generarFacturasMensuales(
-                $periodo->año, 
-                $periodo->mes,
-                Auth::user()->empresa_id
-            );
-
-            if ($resultado['success']) {
-                session()->flash('message', $resultado['message']);
-                $this->actualizarLista();
-                $this->cerrarModalFacturacion();
-            } else {
-                session()->flash('error', $resultado['message']);
-            }
-
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error en facturación masiva: ' . $e->getMessage());
-        } finally {
-            $this->procesandoFacturacion = false;
-        }
-    }
-
-    public function procesarFacturacionAutomatica()
-    {
-        $this->procesandoFacturacion = true;
-
-        try {
-            $empresaId = Auth::user()->empresa_id ?? 1;
-            $facturacionService = app(FacturacionService::class);
-            
-            $resultado = $facturacionService->generarFacturasPeriodoActual($empresaId);
-
-            if ($resultado['success']) {
-                session()->flash('message', 'Facturación automática completada: ' . $resultado['message']);
-                $this->actualizarLista();
-            } else {
-                session()->flash('error', $resultado['message']);
-            }
-
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error en facturación automática: ' . $e->getMessage());
-        } finally {
-            $this->procesandoFacturacion = false;
-        }
-    }
-
-    public function procesarFacturacionMesSiguiente()
-    {
-        $this->procesandoFacturacion = true;
-
-        try {
-            $empresaId = Auth::user()->empresa_id ?? 1;
-            $facturacionService = app(FacturacionService::class);
-            
-            $resultado = $facturacionService->generarFacturasProximoMes($empresaId);
-
-            if ($resultado['success']) {
-                session()->flash('message', 'Facturación del próximo mes completada: ' . $resultado['message']);
-                $this->actualizarLista();
-            } else {
-                session()->flash('error', $resultado['message']);
-            }
-
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error en facturación del próximo mes: ' . $e->getMessage());
-        } finally {
-            $this->procesandoFacturacion = false;
-        }
-    }
-
-    public function obtenerInformacionPeriodoActual()
-    {
-        try {
-            $empresaId = Auth::user()->empresa_id ?? 1;
-            $periodoFacturacionService = app(PeriodoFacturacionService::class);
-            
-            return $periodoFacturacionService->periodoActualListoParaFacturar($empresaId);
-            
-        } catch (\Exception $e) {
-            return [
-                'listo' => false,
-                'mensaje' => 'Error: ' . $e->getMessage(),
-                'periodo' => null
-            ];
-        }
     }
 
     public function aplicarMoras()
@@ -345,16 +224,31 @@ class FacturaIndex extends Component
             $estadisticas = $facturaRepository->getEstadisticasPeriodo($this->filtroPeriodo);
         }
 
-        // Información del período actual para facturación automática
-        $infoPeriodoActual = $this->obtenerInformacionPeriodoActual();
-        $fechaActual = Carbon::now();
+        // Día de facturación configurado
+        $empresa = Auth::user()->empresa;
+        $diaFacturacion = (int) ($empresa->configuraciones['dia_facturacion'] ?? 1);
+        $hoy = Carbon::now();
+        $proximaFecha = $hoy->day <= $diaFacturacion
+            ? $hoy->copy()->setDay($diaFacturacion)
+            : $hoy->copy()->addMonth()->setDay($diaFacturacion);
+
+        // Deuda acumulada por cliente (todas sus facturas no pagadas/anuladas)
+        $clienteIds = $facturas->pluck('cliente_id')->unique()->filter();
+        $deudasPorCliente = \App\Models\Factura::where('empresa_id', $empresaId)
+            ->whereIn('cliente_id', $clienteIds)
+            ->whereIn('estado', ['pendiente', 'vencido', 'parcial'])
+            ->groupBy('cliente_id')
+            ->selectRaw('cliente_id, SUM(total) as deuda_total, COUNT(*) as cant_facturas')
+            ->get()
+            ->keyBy('cliente_id');
 
         return view('livewire.facturas.factura-index', [
-            'facturas' => $facturas,
-            'periodos' => $periodos,
-            'estadisticas' => $estadisticas,
-            'infoPeriodoActual' => $infoPeriodoActual,
-            'fechaActual' => $fechaActual
+            'facturas'          => $facturas,
+            'periodos'          => $periodos,
+            'estadisticas'      => $estadisticas,
+            'diaFacturacion'    => $diaFacturacion,
+            'proximaFecha'      => $proximaFecha,
+            'deudasPorCliente'  => $deudasPorCliente,
         ]);
     }
 }

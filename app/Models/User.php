@@ -18,19 +18,9 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'empresa_id',
-        'name',
-        'apellido',
-        'email',
-        'password',
-        'telefono',
-        'cedula',
-        'direccion',
-        'tipo_usuario',
-        'estado',
-        'last_login_at',
-        'avatar',
-        'preferencias',
+        'empresa_id', 'name', 'apellido', 'email', 'password',
+        'telefono', 'cedula', 'direccion', 'tipo_usuario',
+        'estado', 'last_login_at', 'avatar', 'preferencias', 'permisos',
     ];
 
     /**
@@ -50,9 +40,25 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'last_login_at' => 'datetime',
-        'preferencias' => 'array',
-        'password' => 'hashed',
+        'last_login_at'     => 'datetime',
+        'preferencias'      => 'array',
+        'permisos'          => 'array',
+        'password'          => 'hashed',
+    ];
+
+    // Módulos del sistema con sus etiquetas
+    public const MODULOS = [
+        'dashboard'      => ['label' => 'Dashboard',          'icono' => 'fas fa-tachometer-alt'],
+        'clientes'       => ['label' => 'Clientes',           'icono' => 'fas fa-users'],
+        'facturas'       => ['label' => 'Facturas',           'icono' => 'fas fa-file-invoice'],
+        'pagos'          => ['label' => 'Pagos',              'icono' => 'fas fa-money-bill-wave'],
+        'cobranza'       => ['label' => 'Cobranza',           'icono' => 'fas fa-hand-holding-usd'],
+        'reportes'       => ['label' => 'Reportes',           'icono' => 'fas fa-chart-bar'],
+        'ciudades'       => ['label' => 'Ciudades',           'icono' => 'fas fa-city'],
+        'barrios'        => ['label' => 'Barrios',            'icono' => 'fas fa-map-marker-alt'],
+        'tarifas'        => ['label' => 'Tarifas',            'icono' => 'fas fa-tags'],
+        'configuracion'  => ['label' => 'Configuración',      'icono' => 'fas fa-cog'],
+        'usuarios'       => ['label' => 'Usuarios',           'icono' => 'fas fa-user-cog'],
     ];
 
     // Relaciones
@@ -95,6 +101,17 @@ class User extends Authenticatable
     public function scopePorTipo($query, $tipo)
     {
         return $query->where('tipo_usuario', $tipo);
+    }
+
+    // Verificar permiso de módulo
+    public function tienePermiso(string $modulo): bool
+    {
+        // admin_empresa y super_admin tienen acceso total
+        if (in_array($this->tipo_usuario, ['super_admin', 'admin_empresa'])) {
+            return true;
+        }
+        $permisos = $this->permisos ?? [];
+        return in_array($modulo, $permisos);
     }
 
     // Métodos auxiliares

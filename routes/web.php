@@ -14,7 +14,12 @@ use App\Livewire\Dashboard;
 |
 */
 
-Route::view('/', 'welcome');
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect('/dashboard');
+    }
+    return redirect('/login');
+});
 
 // Dashboard - temporalmente sin middleware tenant para pruebas
 Route::get('/dashboard', Dashboard::class)
@@ -103,6 +108,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cobradores/{cobradorId}/editar', \App\Livewire\Cobradores\CobradorForm::class)
         ->name('cobradores.editar');
     
+    // Ciudades
+    Route::get('/ciudades', \App\Livewire\Ciudades\CiudadIndex::class)
+        ->name('ciudades.index');
+
+    Route::get('/ciudades/crear', \App\Livewire\Ciudades\CiudadForm::class)
+        ->name('ciudades.crear');
+
+    Route::get('/ciudades/{ciudadId}/editar', \App\Livewire\Ciudades\CiudadForm::class)
+        ->name('ciudades.editar');
+
     // Barrios
     Route::get('/barrios', \App\Livewire\Barrios\BarrioIndex::class)
         ->name('barrios.index');
@@ -148,15 +163,27 @@ Route::middleware(['auth'])->group(function () {
         return view('coming-soon', ['module' => 'Reportes']);
     })->name('reportes.index');
     
+    // Configuración de Recibos
+    Route::get('/configuracion-recibos', \App\Livewire\Configuracion\ConfiguracionRecibos::class)
+        ->name('configuracion.recibos');
+
+    // Configuración de Facturación (día de generación automática)
+    Route::get('/configuracion-facturacion', \App\Livewire\Configuracion\ConfiguracionFacturacion::class)
+        ->name('configuracion.facturacion');
+
+    // Configuración de Moras y Avisos
+    Route::get('/configuracion-moras', \App\Livewire\Configuracion\ConfiguracionMoras::class)
+        ->name('configuracion.moras');
+    
     // Configuración (solo para admin)
     Route::middleware(['admin'])->group(function () {
         Route::get('/configuracion', function() {
             return view('coming-soon', ['module' => 'Configuración']);
         })->name('configuracion.index');
         
-        Route::get('/usuarios', function() {
-            return view('coming-soon', ['module' => 'Usuarios']);
-        })->name('usuarios.index');
+        Route::get('/usuarios', \App\Livewire\Usuarios\UsuarioIndex::class)->name('usuarios.index');
+        Route::get('/usuarios/crear', \App\Livewire\Usuarios\UsuarioForm::class)->name('usuarios.crear');
+        Route::get('/usuarios/{usuarioId}/editar', \App\Livewire\Usuarios\UsuarioForm::class)->name('usuarios.editar');
         
         Route::get('/empresa/configuracion', function() {
             return view('coming-soon', ['module' => 'Configuración de Empresa']);

@@ -29,6 +29,7 @@ class Factura extends Model
         'tipo_factura',
         'observaciones',
         'datos_cliente',
+        'aviso',
     ];
 
     protected $casts = [

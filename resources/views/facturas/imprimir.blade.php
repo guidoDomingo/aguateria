@@ -2,247 +2,190 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Imprimir Factura {{ $factura->numero_factura }}</title>
+    <title>Factura {{ $factura->numero_factura }}</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 15px;
-            background: white;
-            font-size: 12px;
-            line-height: 1.3;
-        }
-        .factura {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 15px;
-        }
-        .empresa-nombre {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .empresa-info {
-            font-size: 10px;
-            color: #666;
-            margin-bottom: 10px;
-        }
-        .factura-numero {
-            font-size: 16px;
-            font-weight: bold;
-            background: #f5f5f5;
-            padding: 8px;
-            border: 2px solid #333;
-            margin-top: 10px;
-        }
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin: 15px 0;
-            font-size: 11px;
-        }
-        .info-seccion h4 {
-            margin: 0 0 8px 0;
-            font-size: 12px;
-            color: #333;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 2px;
-        }
-        .info-seccion p {
-            margin: 2px 0;
-            line-height: 1.2;
-        }
-        .tabla-detalles {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-            font-size: 10px;
-        }
-        .tabla-detalles th,
-        .tabla-detalles td {
-            border: 1px solid #ccc;
-            padding: 4px;
-        }
-        .tabla-detalles th {
-            background: #f0f0f0;
-            font-weight: bold;
-            text-align: center;
-        }
-        .tabla-detalles .numero {
-            text-align: right;
-        }
-        .tabla-detalles .total-row {
-            background: #f0f0f0;
-            font-weight: bold;
-        }
-        .total-destacado {
-            text-align: center;
-            font-size: 16px;
-            font-weight: bold;
-            background: #f5f5f5;
-            padding: 10px;
-            margin: 15px 0;
-            border: 2px solid #333;
-        }
-        .estado {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 9px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .estado.pendiente { background: #fff3cd; color: #856404; }
-        .estado.pagado { background: #d4edda; color: #155724; }
-        .estado.vencido { background: #f8d7da; color: #721c24; }
-        .estado.parcial { background: #d1ecf1; color: #0c5460; }
-        .estado.anulado { background: #e2e3e5; color: #383d41; }
-        .pagos-info {
-            background: #f9f9f9;
-            padding: 10px;
-            margin: 15px 0;
-            border: 1px solid #ddd;
-            font-size: 11px;
-        }
-        .footer {
-            text-align: center;
-            font-size: 9px;
-            color: #666;
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #ccc;
-        }
-        @media print {
-            body {
-                margin: 0;
-                padding: 10px;
-                font-size: 11px;
-            }
-            .factura {
-                max-width: 100%;
-            }
-        }
-        @page {
-            margin: 1cm;
-        }
+        @php $color = $configuracion->colores['header'] ?? '#2563eb'; @endphp
+        body { font-family: {{ $configuracion->fuente ?? 'Arial' }}, sans-serif; margin:0; padding:12px; background:white; font-size:12px; line-height:1.3; color:#222; }
+        .header { text-align:center; border-bottom:2px solid {{ $color }}; padding-bottom:12px; margin-bottom:12px; }
+        .empresa-nombre { font-size:16px; font-weight:bold; color:{{ $color }}; }
+        .empresa-info { font-size:10px; color:#666; margin-top:3px; }
+        .factura-num { font-size:14px; font-weight:bold; margin:8px 0; border:2px solid {{ $color }}; display:inline-block; padding:4px 12px; color:{{ $color }}; }
+        .aviso { display:inline-block; padding:2px 8px; border-radius:3px; font-size:10px; font-weight:bold; margin-top:4px; }
+        .aviso-desc { background:#fee2e2; color:#991b1b; }
+        .aviso-ult { background:#fef9c3; color:#92400e; }
+        .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; margin:12px 0; font-size:11px; }
+        .info-seccion h4 { font-size:10px; font-weight:bold; color:{{ $color }}; text-transform:uppercase; border-bottom:1px solid #eee; padding-bottom:2px; margin:0 0 6px; }
+        .info-seccion p { margin:2px 0; }
+        .label { color:#888; }
+        .total-box { border:2px solid {{ $color }}; padding:8px 12px; margin:10px 0; text-align:center; }
+        .total-box .monto { font-size:18px; font-weight:bold; color:{{ $color }}; }
+        .total-box .label-total { font-size:10px; color:#666; }
+        .tabla { width:100%; border-collapse:collapse; font-size:10px; margin:8px 0; }
+        .tabla th { background:#f3f4f6; padding:4px 6px; text-align:left; border-bottom:2px solid #ddd; }
+        .tabla th.r, .tabla td.r { text-align:right; }
+        .tabla td { padding:4px 6px; border-bottom:1px solid #f0f0f0; }
+        .otras-box { background:#fff7f7; border:1px solid #fca5a5; padding:8px 10px; margin:10px 0; border-radius:3px; }
+        .otras-box h4 { font-size:10px; font-weight:bold; color:#dc2626; text-transform:uppercase; margin:0 0 5px; }
+        .deuda-total { display:flex; justify-content:space-between; font-weight:bold; font-size:12px; color:#dc2626; border-top:1px solid #fca5a5; padding-top:5px; margin-top:4px; }
+        .pagos-box { background:#f0fdf4; border:1px solid #bbf7d0; padding:8px 10px; margin:10px 0; border-radius:3px; }
+        .pagos-box h4 { font-size:10px; font-weight:bold; color:#166534; text-transform:uppercase; margin:0 0 5px; }
+        .footer { text-align:center; font-size:9px; color:#999; margin-top:15px; padding-top:10px; border-top:1px solid #eee; }
+        @media print { body{margin:0;padding:8px;} @page{margin:.5cm;} }
     </style>
     <script>
-        window.onload = function() {
-            // Auto-imprimir cuando la página carga
-            setTimeout(function() {
-                window.print();
-            }, 500);
-        }
+        window.onload = function() { setTimeout(function(){ window.print(); }, 400); }
     </script>
 </head>
 <body>
-    <div class="factura">
-        <!-- Header -->
-        <div class="header">
-            <div class="empresa-nombre">{{ $factura->empresa->nombre }}</div>
-            <div class="empresa-info">
+    <!-- Header -->
+    <div class="header">
+        <div class="empresa-nombre">{{ $factura->empresa->nombre }}</div>
+        <div class="empresa-info">
+            @if($configuracion->mostrar_direccion_empresa && $factura->empresa->direccion)
                 {{ $factura->empresa->direccion }}
-                @if($factura->empresa->telefono) • Tel: {{ $factura->empresa->telefono }}@endif
-                @if($factura->empresa->email) • {{ $factura->empresa->email }}@endif
-            </div>
-            <div class="factura-numero">
-                FACTURA N° {{ str_pad($factura->numero_factura, 6, '0', STR_PAD_LEFT) }}
-            </div>
+            @endif
+            @if($configuracion->mostrar_telefono_empresa && $factura->empresa->telefono)
+                &nbsp;·&nbsp; Tel: {{ $factura->empresa->telefono }}
+            @endif
+            @if($configuracion->mostrar_email_empresa && $factura->empresa->email)
+                &nbsp;·&nbsp; {{ $factura->empresa->email }}
+            @endif
         </div>
+        <div class="factura-num">FACTURA N° {{ $factura->numero_factura }}</div>
+        @if($factura->aviso === 'desconexion')
+            <div><span class="aviso aviso-desc">⚠ AVISO DE DESCONEXIÓN</span></div>
+        @elseif($factura->aviso === 'ultimo_aviso')
+            <div><span class="aviso aviso-ult">🔔 ÚLTIMO AVISO</span></div>
+        @endif
+    </div>
 
-        <div class="info-grid">
-            <!-- Datos de la Factura -->
-            <div class="info-seccion">
-                <h4>Datos de la Factura</h4>
-                <p><strong>Fecha:</strong> {{ $factura->fecha_emision->format('d/m/Y') }}</p>
-                <p><strong>Vencimiento:</strong> {{ $factura->fecha_vencimiento->format('d/m/Y') }}</p>
-                <p><strong>Período:</strong> 
-                    @if($factura->periodo)
-                        {{ \Carbon\Carbon::createFromDate($factura->periodo->año, $factura->periodo->mes, 1)->locale('es')->isoFormat('MMM YYYY') }}
-                    @else
-                        Sin período
-                    @endif
-                </p>
-                <p><strong>Estado:</strong> <span class="estado {{ $factura->estado }}">{{ ucfirst($factura->estado) }}</span></p>
-            </div>
-
-            <!-- Datos del Cliente -->
-            <div class="info-seccion">
-                <h4>Cliente</h4>
-                <p><strong>{{ $factura->cliente->nombre }} {{ $factura->cliente->apellido }}</strong></p>
-                <p>{{ $factura->cliente->cedula }}</p>
-                <p>{{ Str::limit($factura->cliente->direccion, 40) }}</p>
-                @if($factura->cliente->telefono)
-                <p>Tel: {{ $factura->cliente->telefono }}</p>
-                @endif
-            </div>
+    <!-- Info cliente y factura -->
+    <div class="info-grid">
+        <div class="info-seccion">
+            <h4>Datos</h4>
+            <p><span class="label">Fecha:</span> {{ $factura->fecha_emision->format('d/m/Y') }}</p>
+            <p><span class="label">Vencimiento:</span>
+                <strong style="{{ $factura->fecha_vencimiento->isPast() && $factura->estado !== 'pagado' ? 'color:#dc2626' : '' }}">
+                    {{ $factura->fecha_vencimiento->format('d/m/Y') }}
+                </strong>
+            </p>
+            <p><span class="label">Período:</span>
+                @if($factura->periodo)
+                    {{ \Carbon\Carbon::createFromDate($factura->periodo->año, $factura->periodo->mes, 1)->locale('es')->isoFormat('MMM YYYY') }}
+                @else Sin período @endif
+            </p>
+            <p><span class="label">Estado:</span> {{ ucfirst($factura->estado) }}</p>
         </div>
-
-        <!-- Total Destacado -->
-        <div class="total-destacado">
-            TOTAL: {{ number_format($factura->total, 0, ',', '.') }} Gs.
+        <div class="info-seccion">
+            <h4>Cliente</h4>
+            <p><strong>{{ $factura->cliente->nombre }} {{ $factura->cliente->apellido }}</strong></p>
+            <p><span class="label">CI:</span> {{ $factura->cliente->cedula }}</p>
+            @if($factura->cliente->direccion)
+            <p>{{ \Str::limit($factura->cliente->direccion, 40) }}</p>
+            @endif
+            @if($factura->cliente->telefono)
+            <p>Tel: {{ $factura->cliente->telefono }}</p>
+            @endif
+            @if($factura->cliente->barrio)
+            <p><span class="label">Barrio:</span> {{ $factura->cliente->barrio->nombre }}</p>
+            @endif
         </div>
+    </div>
 
-        <!-- Detalles de la Factura -->
-        @if($factura->detalles && $factura->detalles->count() > 0)
-        <table class="tabla-detalles">
+    <!-- Total esta factura -->
+    <div class="total-box">
+        <div class="label-total">TOTAL ESTA FACTURA</div>
+        <div class="monto">{{ number_format($factura->total, 0, ',', '.') }} Gs.</div>
+        @if($factura->mora > 0)
+            <div style="font-size:10px;color:#d97706">Incluye mora: {{ number_format($factura->mora, 0, ',', '.') }} Gs.</div>
+        @endif
+    </div>
+
+    <!-- Otras facturas pendientes -->
+    @if($otrasFacturas->count() > 0)
+    <div class="otras-box">
+        <h4>⚠ Otras facturas pendientes del cliente</h4>
+        <table class="tabla">
+            @foreach($otrasFacturas as $otra)
+            <tr>
+                <td>#{{ $otra->numero_factura }}</td>
+                <td style="{{ $otra->fecha_vencimiento->isPast() ? 'color:#dc2626' : '' }}">
+                    Vence: {{ $otra->fecha_vencimiento->format('d/m/Y') }}
+                </td>
+                <td class="r">{{ number_format($otra->total, 0, ',', '.') }} Gs.</td>
+            </tr>
+            @endforeach
+        </table>
+        <div class="deuda-total">
+            <span>DEUDA TOTAL DEL CLIENTE:</span>
+            <span>{{ number_format($deudaTotal, 0, ',', '.') }} Gs.</span>
+        </div>
+    </div>
+    @endif
+
+    <!-- Historial de pagos -->
+    @if($factura->pagos->count() > 0)
+    <div class="pagos-box">
+        <h4>Pagos Registrados</h4>
+        <table class="tabla" style="font-size:10px">
             <thead>
                 <tr>
-                    <th width="30%">Concepto</th>
-                    <th width="35%">Descripción</th>
-                    <th width="10%">Cant.</th>
-                    <th width="25%">Subtotal</th>
+                    <th>Fecha</th><th>Método</th><th class="r">Monto</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($factura->detalles as $detalle)
+                @foreach($factura->pagos as $pago)
                 <tr>
-                    <td>{{ $detalle->concepto }}</td>
-                    <td>{{ $detalle->descripcion }}</td>
-                    <td class="numero">{{ $detalle->cantidad }}</td>
-                    <td class="numero">{{ number_format($detalle->subtotal, 0, ',', '.') }} Gs.</td>
+                    <td>{{ $pago->fecha_pago->format('d/m/Y') }}</td>
+                    <td>{{ $pago->metodoPago->nombre ?? $pago->metodo_pago ?? '-' }}</td>
+                    <td class="r" style="color:#16a34a;font-weight:bold">{{ number_format($pago->monto_pagado, 0, ',', '.') }} Gs.</td>
                 </tr>
                 @endforeach
-                <tr class="total-row">
-                    <td colspan="3"><strong>TOTAL:</strong></td>
-                    <td class="numero"><strong>{{ number_format($factura->total, 0, ',', '.') }} Gs.</strong></td>
-                </tr>
             </tbody>
         </table>
-        @endif
-
-        <!-- Información de Pagos -->
-        @if($factura->monto_pagado > 0)
-        <div class="pagos-info">
-            <h4>Estado de Pagos</h4>
-            <p><strong>Monto Pagado:</strong> {{ number_format($factura->monto_pagado, 0, ',', '.') }} Gs.</p>
-            <p><strong>Saldo Pendiente:</strong> {{ number_format($factura->saldo_pendiente, 0, ',', '.') }} Gs.</p>
-            @if($factura->fecha_pago)
-            <p><strong>Fecha de Pago:</strong> {{ $factura->fecha_pago->format('d/m/Y') }}</p>
-            @endif
+        <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:11px;padding-top:4px;border-top:1px solid #bbf7d0">
+            <span>Total pagado:</span>
+            <span style="color:#16a34a">{{ number_format($factura->pagos->sum('monto_pagado'), 0, ',', '.') }} Gs.</span>
+        </div>
+        @if($factura->saldo_pendiente > 0)
+        <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:11px;color:#dc2626">
+            <span>Saldo pendiente:</span>
+            <span>{{ number_format($factura->saldo_pendiente, 0, ',', '.') }} Gs.</span>
         </div>
         @endif
+    </div>
+    @endif
 
-        <!-- Observaciones -->
-        @if($factura->observaciones)
-        <div style="margin-top: 15px; padding: 8px; background: #f9f9f9; border: 1px solid #ddd; font-size: 10px;">
-            <strong>Observaciones:</strong><br>
-            {{ $factura->observaciones }}
-        </div>
-        @endif
+    <!-- Detalles de servicios -->
+    @if($factura->detalles && $factura->detalles->count() > 0)
+    <table class="tabla">
+        <thead>
+            <tr>
+                <th>Concepto</th><th>Descripción</th><th class="r">Cant.</th><th class="r">Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($factura->detalles as $detalle)
+            <tr>
+                <td>{{ $detalle->concepto }}</td>
+                <td style="color:#666">{{ $detalle->descripcion }}</td>
+                <td class="r">{{ $detalle->cantidad }}</td>
+                <td class="r">{{ number_format($detalle->subtotal, 0, ',', '.') }} Gs.</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+    @endif
 
-        <div class="footer">
-            <p>Gracias por su preferencia</p>
-            <p>{{ now()->format('d/m/Y H:i') }}</p>
-        </div>
+    @if($factura->observaciones)
+    <div style="margin:10px 0;padding:6px;background:#f9f9f9;border:1px solid #eee;font-size:10px;">
+        <strong>Obs:</strong> {{ $factura->observaciones }}
+    </div>
+    @endif
+
+    <div class="footer">
+        {{ $configuracion->mensaje_inferior ?? 'Gracias por su preferencia' }}<br>
+        {{ now()->format('d/m/Y H:i') }}
     </div>
 </body>
 </html>

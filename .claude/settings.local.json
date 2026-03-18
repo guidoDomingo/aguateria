@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/laragon/www/aguateria/app/Models -type f -name *.php)",
+      "Bash(php artisan tinker --execute=\":*)",
+      "Bash(php artisan:*)",
+      "Bash(php -l c:/laragon/www/aguateria/app/Livewire/Facturas/FacturaIndex.php)",
+      "Bash(php -l c:/laragon/www/aguateria/app/Console/Commands/FacturacionAutomatica.php)",
+      "Bash(grep -v \"^$\")"
+    ]
+  }
+}

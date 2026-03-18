@@ -103,36 +103,58 @@ class PeriodoFacturacionService
             DB::beginTransaction();
 
             // Obtener clientes activos
-            $clientes = $this->clienteRepository->getClientesActivos($periodo->empresa_id);
+            $clientes = $this->clienteRepository->activos($periodo->empresa_id);
             $facturasGeneradas = 0;
             $montoTotal = 0;
             $errores = [];
 
             foreach ($clientes as $cliente) {
                 try {
-                    // Generar factura para el cliente
-                    $facturaData = [
-                        'cliente_id' => $cliente->id,
-                        'periodo_id' => $periodo->id,
-                        'periodo' => $periodo->nombre,
-                        'fecha_emision' => now(),
-                        'fecha_vencimiento' => $periodo->fecha_vencimiento,
-                        'monto_base' => $cliente->tarifa->precio_base,
-                        'consumo' => 0, // Por defecto, se puede actualizar después
-                        'monto_consumo' => 0,
-                        'otros_cargos' => 0,
-                        'descuentos' => 0,
-                        'estado' => 'pendiente'
-                    ];
+                    // Saltar si ya existe una factura pendiente o pagada para este cliente en este período
+                    $yaFacturado = \App\Models\Factura::where('empresa_id', $periodo->empresa_id)
+                        ->where('cliente_id', $cliente->id)
+                        ->where('periodo_id', $periodo->id)
+                        ->whereIn('estado', ['pendiente', 'pagado', 'parcial'])
+                        ->exists();
 
-                    $facturaData['monto_total'] = $facturaData['monto_base'] + 
-                                                 $facturaData['monto_consumo'] + 
-                                                 $facturaData['otros_cargos'] - 
-                                                 $facturaData['descuentos'];
+                    if ($yaFacturado) {
+                        continue;
+                    }
+
+                    $tarifa  = $cliente->tarifa;
+                    $subtotal = $tarifa->monto_mensual ?? 0;
+                    $descuento = $cliente->descuento_especial ?? 0;
+                    $total = $subtotal - $descuento;
+
+                    $numeroInfo = $this->facturaRepository->siguienteNumeroFactura($periodo->empresa_id);
+
+                    $facturaData = [
+                        'empresa_id'       => $periodo->empresa_id,
+                        'cliente_id'       => $cliente->id,
+                        'periodo_id'       => $periodo->id,
+                        'numero_factura'   => $numeroInfo['numero_factura'],
+                        'serie'            => $numeroInfo['serie'],
+                        'numero'           => $numeroInfo['numero'],
+                        'subtotal'         => $subtotal,
+                        'mora'             => 0,
+                        'descuento'        => $descuento,
+                        'impuesto'         => 0,
+                        'total'            => $total,
+                        'saldo_pendiente'  => $total,
+                        'fecha_emision'    => now(),
+                        'fecha_vencimiento'=> $periodo->fecha_vencimiento,
+                        'estado'           => 'pendiente',
+                        'tipo_factura'     => 'mensual',
+                        'datos_cliente'    => json_encode([
+                            'nombre'   => $cliente->nombre . ' ' . $cliente->apellido,
+                            'cedula'   => $cliente->cedula,
+                            'direccion'=> $cliente->direccion,
+                        ]),
+                    ];
 
                     $factura = $this->facturaRepository->create($facturaData);
                     $facturasGeneradas++;
-                    $montoTotal += $factura->monto_total;
+                    $montoTotal += $factura->total;
 
                 } catch (\Exception $e) {
                     $errores[] = "Cliente {$cliente->nombre}: " . $e->getMessage();

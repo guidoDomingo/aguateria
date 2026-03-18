@@ -1,12 +1,8 @@
 <div>
-    <!-- Header con botón de actualizar -->
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p class="text-gray-600">Panel de control y estadísticas generales</p>
-        </div>
-        <button 
-            wire:click="refrescarEstadisticas" 
+    <!-- Botón actualizar -->
+    <div class="flex justify-end mb-6">
+        <button
+            wire:click="refrescarEstadisticas"
             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
             {{ $cargando ? 'disabled' : '' }}
         >
@@ -196,7 +192,7 @@
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h3>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <a href="#" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <a href="{{ route('clientes.create') }}" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                     <div class="p-2 bg-blue-100 rounded-lg">
                         <i class="fas fa-user-plus text-blue-600"></i>
                     </div>
@@ -206,7 +202,7 @@
                     </div>
                 </a>
 
-                <a href="#" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <a href="{{ route('pagos.create') }}" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                     <div class="p-2 bg-green-100 rounded-lg">
                         <i class="fas fa-credit-card text-green-600"></i>
                     </div>
@@ -216,7 +212,7 @@
                     </div>
                 </a>
 
-                <a href="#" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <a href="{{ route('facturas.index') }}" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                     <div class="p-2 bg-yellow-100 rounded-lg">
                         <i class="fas fa-file-invoice text-yellow-600"></i>
                     </div>
@@ -226,7 +222,7 @@
                     </div>
                 </a>
 
-                <a href="#" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <a href="{{ route('reportes.index') }}" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                     <div class="p-2 bg-purple-100 rounded-lg">
                         <i class="fas fa-chart-bar text-purple-600"></i>
                     </div>
@@ -256,7 +252,7 @@
                         </p>
                     </div>
                     <div class="mt-4">
-                        <a href="#" class="text-yellow-800 font-medium hover:text-yellow-900">
+                        <a href="{{ route('cobranza.index') }}" class="text-yellow-800 font-medium hover:text-yellow-900">
                             Ver gestión de cobranza →
                         </a>
                     </div>
