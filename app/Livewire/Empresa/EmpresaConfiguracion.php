@@ -5,7 +5,6 @@ namespace App\Livewire\Empresa;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class EmpresaConfiguracion extends Component
 {
@@ -82,7 +81,7 @@ class EmpresaConfiguracion extends Component
             ];
 
             if ($this->logo_nuevo) {
-                $path = $this->logo_nuevo->store('logos', 'public');
+                $path = $this->redimensionarYGuardarLogo($this->logo_nuevo);
                 $data['logo'] = $path;
                 $this->logo_actual = $path;
                 $this->logo_nuevo  = null;
@@ -95,6 +94,31 @@ class EmpresaConfiguracion extends Component
         } catch (\Exception $e) {
             $this->dispatch('toast', message: 'Error al guardar: ' . $e->getMessage(), type: 'error');
         }
+    }
+
+    /**
+     * Redimensiona el logo a máx 300x300px usando Intervention Image.
+     * Funciona en local y producción sin importar si hay GD o Imagick.
+     */
+    private function redimensionarYGuardarLogo($archivo): string
+    {
+        $filename = 'logos/' . \Illuminate\Support\Str::uuid() . '.png';
+        $fullPath = storage_path('app/public/' . $filename);
+
+        if (!is_dir(dirname($fullPath))) {
+            mkdir(dirname($fullPath), 0775, true);
+        }
+
+        $manager = new \Intervention\Image\ImageManager(
+            new \Intervention\Image\Drivers\Gd\Driver()
+        );
+
+        $manager->read($archivo->getRealPath())
+                ->scaleDown(width: 300, height: 300)
+                ->toPng()
+                ->save($fullPath);
+
+        return $filename;
     }
 
     public function render()

@@ -9,7 +9,9 @@
       "Bash(grep -v \"^$\")",
       "Bash(ls c:/laragon/www/aguateria/database/migrations/2026_03_*.php)",
       "Bash(xargs -I{} basename {})",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(php -r \"echo extension_loaded\\(''gd''\\) ? ''GD OK'' : ''NO GD''; echo '' | ''; echo extension_loaded\\(''imagick''\\) ? ''Imagick OK'' : ''NO Imagick'';\")",
+      "Bash(composer require:*)"
     ]
   }
 }
