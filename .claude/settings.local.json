@@ -8,7 +8,8 @@
       "Bash(php -l c:/laragon/www/aguateria/app/Console/Commands/FacturacionAutomatica.php)",
       "Bash(grep -v \"^$\")",
       "Bash(ls c:/laragon/www/aguateria/database/migrations/2026_03_*.php)",
-      "Bash(xargs -I{} basename {})"
+      "Bash(xargs -I{} basename {})",
+      "Bash(npm run:*)"
     ]
   }
 }

@@ -185,9 +185,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/usuarios/crear', \App\Livewire\Usuarios\UsuarioForm::class)->name('usuarios.crear');
         Route::get('/usuarios/{usuarioId}/editar', \App\Livewire\Usuarios\UsuarioForm::class)->name('usuarios.editar');
         
-        Route::get('/empresa/configuracion', function() {
-            return view('coming-soon', ['module' => 'Configuración de Empresa']);
-        })->name('empresa.configuracion');
+        Route::get('/empresa/configuracion', \App\Livewire\Empresa\EmpresaConfiguracion::class)->name('empresa.configuracion');
     });
     
     // Super Admin (solo para super admin)

@@ -63,9 +63,9 @@ class ReciboController extends Controller
         
         switch ($tipoPlantilla) {
             case 'modern':
-                return "recibos.moderno{$sufijo}";
+                return "recibos.modern{$sufijo}";
             case 'classic':
-                return "recibos.clasico{$sufijo}";
+                return "recibos.classic{$sufijo}";
             case 'minimal':
                 return "recibos.minimal{$sufijo}";
             default:

@@ -30,119 +30,7 @@
                 </h1>
             </div>
 
-            <!-- Navigation -->
-            <nav class="mt-5 px-2">
-                @if(auth()->user()->tienePermiso('dashboard'))
-                <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
-                    <i class="fas fa-chart-pie w-5 h-5 mr-3"></i>
-                    Dashboard
-                </x-nav-link>
-                @endif
-
-                @if(auth()->user()->tienePermiso('clientes'))
-                <x-nav-link href="{{ route('clientes.index') }}" :active="request()->routeIs('clientes.*')">
-                    <i class="fas fa-users w-5 h-5 mr-3"></i>
-                    Clientes
-                </x-nav-link>
-                @endif
-
-                @if(auth()->user()->tienePermiso('facturas'))
-                <x-nav-link href="{{ route('facturas.index') }}" :active="request()->routeIs('facturas.*')">
-                    <i class="fas fa-file-invoice w-5 h-5 mr-3"></i>
-                    Facturación
-                </x-nav-link>
-                @endif
-
-                @if(auth()->user()->tienePermiso('pagos'))
-                <x-nav-link href="{{ route('pagos.index') }}" :active="request()->routeIs('pagos.*')">
-                    <i class="fas fa-credit-card w-5 h-5 mr-3"></i>
-                    Pagos
-                </x-nav-link>
-                @endif
-
-                <x-nav-link href="{{ route('cortes.index') }}" :active="request()->routeIs('cortes.*')">
-                    <i class="fas fa-power-off w-5 h-5 mr-3"></i>
-                    Cortes y Reconexiones
-                </x-nav-link>
-
-                @if(auth()->user()->tienePermiso('cobranza'))
-                <x-nav-link href="{{ route('cobranza.index') }}" :active="request()->routeIs('cobranza.*')">
-                    <i class="fas fa-money-check-alt w-5 h-5 mr-3"></i>
-                    Cobranza
-                </x-nav-link>
-                @endif
-
-                @if(auth()->user()->tienePermiso('reportes'))
-                <x-nav-link href="{{ route('reportes.index') }}" :active="request()->routeIs('reportes.*')">
-                    <i class="fas fa-chart-bar w-5 h-5 mr-3"></i>
-                    Reportes
-                </x-nav-link>
-                @endif
-
-                @if(auth()->user()->tienePermiso('configuracion'))
-                <div class="mt-4 px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Configuración
-                </div>
-
-                @if(auth()->user()->tienePermiso('ciudades'))
-                <x-nav-link href="{{ route('ciudades.index') }}" :active="request()->routeIs('ciudades.*')">
-                    <i class="fas fa-city w-5 h-5 mr-3"></i>
-                    Ciudades
-                </x-nav-link>
-                @endif
-
-                @if(auth()->user()->tienePermiso('barrios'))
-                <x-nav-link href="{{ route('barrios.index') }}" :active="request()->routeIs('barrios.*')">
-                    <i class="fas fa-map-marker-alt w-5 h-5 mr-3"></i>
-                    Barrios
-                </x-nav-link>
-                @endif
-
-                @if(auth()->user()->tienePermiso('tarifas'))
-                <x-nav-link href="{{ route('tarifas.index') }}" :active="request()->routeIs('tarifas.*')">
-                    <i class="fas fa-dollar-sign w-5 h-5 mr-3"></i>
-                    Tarifas
-                </x-nav-link>
-                @endif
-
-                <x-nav-link href="{{ route('configuracion.facturacion') }}" :active="request()->routeIs('configuracion.facturacion')">
-                    <i class="fas fa-calendar-cog w-5 h-5 mr-3"></i>
-                    Config. Facturación
-                </x-nav-link>
-                @endif
-
-                @if(auth()->user()->tienePermiso('usuarios'))
-                <div class="mt-4 px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Administración
-                </div>
-
-                <x-nav-link href="{{ route('configuracion.index') }}" :active="request()->routeIs('configuracion.index')">
-                    <i class="fas fa-cog w-5 h-5 mr-3"></i>
-                    Configuración
-                </x-nav-link>
-
-                <x-nav-link href="{{ route('usuarios.index') }}" :active="request()->routeIs('usuarios.*')">
-                    <i class="fas fa-user-cog w-5 h-5 mr-3"></i>
-                    Usuarios
-                </x-nav-link>
-
-                <x-nav-link href="{{ route('empresa.configuracion') }}" :active="request()->routeIs('empresa.*')">
-                    <i class="fas fa-building w-5 h-5 mr-3"></i>
-                    Mi Empresa
-                </x-nav-link>
-                @endif
-
-                @if(auth()->user()->isSuperAdmin())
-                <div class="mt-4 px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Super Admin
-                </div>
-
-                <x-nav-link href="{{ route('super.empresas') }}" :active="request()->routeIs('super.*')">
-                    <i class="fas fa-globe w-5 h-5 mr-3"></i>
-                    Gestión Empresas
-                </x-nav-link>
-                @endif
-            </nav>
+            <x-sidebar-nav />
         </div>
 
         <!-- Main Content -->
@@ -227,9 +115,6 @@
 
     @livewireScripts
     
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
     <!-- Custom JavaScript -->
     <script>
         // Toast notification function
