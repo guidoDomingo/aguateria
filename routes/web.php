@@ -84,6 +84,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/facturas/{factura}/imprimir', [\App\Http\Controllers\FacturaController::class, 'imprimir'])
         ->name('facturas.imprimir');
 
+    Route::get('/facturas/boletas/masivas', [\App\Http\Controllers\FacturaController::class, 'boletasMasivas'])
+        ->name('facturas.boletas.masivas');
+
     Route::get('/facturas/{factura}/boleta/imprimir', [\App\Http\Controllers\FacturaController::class, 'boletaImprimir'])
         ->name('facturas.boleta.imprimir');
 

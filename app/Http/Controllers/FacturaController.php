@@ -65,6 +65,46 @@ class FacturaController extends Controller
         return $this->generarBoleta($facturaId, false);
     }
 
+    public function boletasMasivas()
+    {
+        $empresaId = auth()->user()->empresa_id;
+        $empresa   = auth()->user()->empresa;
+
+        // Todos los clientes con facturas pendientes
+        $clienteIds = Factura::where('empresa_id', $empresaId)
+            ->whereIn('estado', ['pendiente', 'vencido', 'parcial'])
+            ->distinct()
+            ->pluck('cliente_id');
+
+        if ($clienteIds->isEmpty()) {
+            return back()->with('error', 'No hay clientes con facturas pendientes.');
+        }
+
+        // Para cada cliente, cargar sus facturas pendientes
+        $clientes = \App\Models\Cliente::with(['barrio'])
+            ->whereIn('id', $clienteIds)
+            ->orderBy('apellido')
+            ->orderBy('nombre')
+            ->get();
+
+        $datos = $clientes->map(function ($cliente) use ($empresaId) {
+            $facturas = Factura::with('periodo')
+                ->where('empresa_id', $empresaId)
+                ->where('cliente_id', $cliente->id)
+                ->whereIn('estado', ['pendiente', 'vencido', 'parcial'])
+                ->orderBy('fecha_vencimiento')
+                ->get(['id', 'numero_factura', 'total', 'saldo_pendiente', 'fecha_vencimiento', 'estado', 'periodo_id']);
+
+            return [
+                'cliente'         => $cliente,
+                'facturasCliente' => $facturas,
+                'totalDeuda'      => $facturas->sum('saldo_pendiente'),
+            ];
+        });
+
+        return view('facturas.boletas-masivas', compact('empresa', 'datos'));
+    }
+
     private function generarBoleta($facturaId, bool $esImpresion)
     {
         $factura = Factura::with(['cliente', 'cliente.barrio', 'periodo', 'empresa'])

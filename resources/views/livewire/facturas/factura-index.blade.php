@@ -1,4 +1,14 @@
 <div>
+    <!-- Botón impresión masiva -->
+    <div class="flex justify-end mb-4">
+        <a href="{{ route('facturas.boletas.masivas') }}" target="_blank"
+           style="background-color:#4f46e5;color:white;"
+           class="inline-flex items-center gap-2 hover:opacity-90 px-4 py-2 rounded-lg font-medium text-sm">
+            <i class="fas fa-print"></i>
+            Imprimir boletas pendientes
+        </a>
+    </div>
+
     <!-- Banner facturación automática -->
     <div class="bg-white rounded-lg shadow-sm border p-4 mb-6 flex items-center justify-between gap-4">
         <div class="flex items-center gap-3">

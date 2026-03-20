@@ -115,7 +115,7 @@ class PagoService
                         'cliente_id'          => $datos['cliente_id'],
                         'factura_id'          => $factura->id,
                         'metodo_pago_id'      => $datos['metodo_pago_id'],
-                        'cobrador_id'         => $datos['cobrador_id'],
+                        'cobrador_id'         => $datos['cobrador_id'] ?: null,
                         'monto_pagado'        => $montoAAplicar,
                         'mora_exonerada'      => $moraExoneradaFactura,
                         'descuento'           => $descuentoFactura,
