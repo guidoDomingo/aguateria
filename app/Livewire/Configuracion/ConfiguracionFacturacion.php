@@ -11,13 +11,15 @@ class ConfiguracionFacturacion extends Component
     public int $dia_facturacion = 1;
     public string $hora = '00';
     public string $minuto = '05';
+    public string $tipo_comprobante = 'factura';
 
     public function mount()
     {
         $empresa = Auth::user()->empresa;
         $config  = $empresa->configuraciones ?? [];
 
-        $this->dia_facturacion = (int) ($config['dia_facturacion'] ?? 1);
+        $this->dia_facturacion  = (int) ($config['dia_facturacion'] ?? 1);
+        $this->tipo_comprobante = $config['tipo_comprobante'] ?? 'factura';
 
         $hora_facturacion = $config['hora_facturacion'] ?? '00:05';
         [$this->hora, $this->minuto] = explode(':', $hora_facturacion);
@@ -26,9 +28,10 @@ class ConfiguracionFacturacion extends Component
     public function rules()
     {
         return [
-            'dia_facturacion' => 'required|integer|min:1|max:28',
-            'hora'   => 'required|integer|min:0|max:23',
-            'minuto' => 'required|in:00,05,10,15,20,25,30,35,40,45,50,55',
+            'dia_facturacion'  => 'required|integer|min:1|max:28',
+            'hora'             => 'required|integer|min:0|max:23',
+            'minuto'           => 'required|in:00,05,10,15,20,25,30,35,40,45,50,55',
+            'tipo_comprobante' => 'required|in:factura,recibo',
         ];
     }
 
@@ -50,6 +53,7 @@ class ConfiguracionFacturacion extends Component
         $configuraciones = $empresa->configuraciones ?? [];
         $configuraciones['dia_facturacion']  = $this->dia_facturacion;
         $configuraciones['hora_facturacion'] = str_pad($this->hora, 2, '0', STR_PAD_LEFT) . ':' . $this->minuto;
+        $configuraciones['tipo_comprobante'] = $this->tipo_comprobante;
 
         $empresa->update(['configuraciones' => $configuraciones]);
 

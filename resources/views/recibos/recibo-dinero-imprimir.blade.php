@@ -360,6 +360,23 @@ body {
         </div>
         <div class="linea-dotted"></div>
 
+        {{-- DEUDAS PENDIENTES --}}
+        @if(isset($otrasFacturas) && $otrasFacturas->count() > 0)
+        <div style="border:1px solid #c00;padding:2mm 3mm;margin-top:2mm;font-size:10px;">
+            <div style="font-weight:bold;color:#c00;margin-bottom:1mm;">⚠ Facturas pendientes:</div>
+            @foreach($otrasFacturas as $otra)
+            <div style="display:flex;justify-content:space-between;">
+                <span>#{{ $otra->numero_factura }} — Vence: {{ \Carbon\Carbon::parse($otra->fecha_vencimiento)->format('d/m/Y') }}</span>
+                <span style="font-weight:bold;">Gs. {{ number_format($otra->saldo_pendiente, 0, ',', '.') }}</span>
+            </div>
+            @endforeach
+            <div style="display:flex;justify-content:space-between;font-weight:bold;border-top:1px solid #c00;margin-top:1mm;padding-top:1mm;color:#c00;">
+                <span>DEUDA TOTAL:</span>
+                <span>Gs. {{ number_format($deudaTotal, 0, ',', '.') }}</span>
+            </div>
+        </div>
+        @endif
+
         {{-- FOOTER --}}
         <div class="footer-row">
             <div class="entrega-saldo">

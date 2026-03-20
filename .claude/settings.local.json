@@ -20,7 +20,8 @@
       "Bash(php -l /c/laragon/www/aguateria/app/Livewire/Configuracion/ConfiguracionRecibos.php)",
       "Bash(php -r \":*)",
       "Bash(php -r \"require ''c:/laragon/www/aguateria/vendor/autoload.php''; echo App\\\\Helpers\\\\NumeroEnLetras::convertir\\(20000\\) . ''\\\\n''; echo App\\\\Helpers\\\\NumeroEnLetras::convertir\\(150500\\) . ''\\\\n'';\")",
-      "Bash(ls c:/laragon/www/aguateria/resources/views/recibos/recibo-dinero*)"
+      "Bash(ls c:/laragon/www/aguateria/resources/views/recibos/recibo-dinero*)",
+      "Bash(head -5 grep -n \"pdf\\\\|imprimir\\\\|comprobante\" c:/laragon/www/aguateria/resources/views/livewire/facturas/factura-index.blade.php)"
     ]
   }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Factura;
 use App\Models\ConfiguracionRecibo;
+use Carbon\Carbon;
 
 class FacturaController extends Controller
 {
@@ -52,5 +53,52 @@ class FacturaController extends Controller
     {
         $datos = $this->cargarDatos($facturaId);
         return view('facturas.imprimir', $datos);
+    }
+
+    public function boletaImprimir($facturaId)
+    {
+        return $this->generarBoleta($facturaId, true);
+    }
+
+    public function boletaPdf($facturaId)
+    {
+        return $this->generarBoleta($facturaId, false);
+    }
+
+    private function generarBoleta($facturaId, bool $esImpresion)
+    {
+        $factura = Factura::with(['cliente', 'cliente.barrio', 'periodo', 'empresa'])
+            ->findOrFail($facturaId);
+
+        if ($factura->empresa_id !== auth()->user()->empresa_id) {
+            abort(403);
+        }
+
+        $empresa  = $factura->empresa;
+        $cliente  = $factura->cliente;
+
+        // Todas las facturas pendientes del cliente (incluye la actual)
+        $facturasCliente = Factura::with('periodo')
+            ->where('empresa_id', $factura->empresa_id)
+            ->where('cliente_id', $factura->cliente_id)
+            ->whereIn('estado', ['pendiente', 'vencido', 'parcial'])
+            ->orderBy('fecha_vencimiento')
+            ->get(['id', 'numero_factura', 'total', 'saldo_pendiente', 'fecha_vencimiento', 'estado', 'periodo_id']);
+
+        $totalDeuda = $facturasCliente->sum('saldo_pendiente');
+
+        $autoImprimir = $esImpresion;
+
+        $html = view('facturas.boleta-cobro', compact(
+            'empresa', 'cliente', 'facturasCliente', 'totalDeuda', 'autoImprimir'
+        ))->render();
+
+        if ($esImpresion) {
+            return response($html)->header('Content-Type', 'text/html');
+        }
+
+        return response($html)
+            ->header('Content-Type', 'text/html')
+            ->header('Content-Disposition', 'inline; filename="boleta-' . $cliente->id . '.html"');
     }
 }

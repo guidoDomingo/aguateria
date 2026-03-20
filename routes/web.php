@@ -83,6 +83,12 @@ Route::middleware(['auth'])->group(function () {
         
     Route::get('/facturas/{factura}/imprimir', [\App\Http\Controllers\FacturaController::class, 'imprimir'])
         ->name('facturas.imprimir');
+
+    Route::get('/facturas/{factura}/boleta/imprimir', [\App\Http\Controllers\FacturaController::class, 'boletaImprimir'])
+        ->name('facturas.boleta.imprimir');
+
+    Route::get('/facturas/{factura}/boleta/pdf', [\App\Http\Controllers\FacturaController::class, 'boletaPdf'])
+        ->name('facturas.boleta.pdf');
     
     // Pagos
     Route::get('/pagos', \App\Livewire\Pagos\PagoIndex::class)

@@ -149,46 +149,44 @@ class FacturaIndex extends Component
         }
     }
 
+    private function tipoComprobante(): string
+    {
+        $config = Auth::user()->empresa->configuraciones ?? [];
+        return $config['tipo_comprobante'] ?? 'factura';
+    }
+
     public function imprimirFactura($facturaId)
     {
         try {
             $factura = \App\Models\Factura::find($facturaId);
-            
-            if (!$factura) {
-                session()->flash('error', 'Factura no encontrada');
+            if (!$factura || $factura->empresa_id !== Auth::user()->empresa_id) {
+                session()->flash('error', 'Factura no encontrada o sin permisos');
                 return;
             }
-            
-            // Verificar que el usuario tenga acceso a la factura
-            if ($factura->empresa_id !== Auth::user()->empresa_id) {
-                session()->flash('error', 'No tiene permisos para acceder a esta factura');
-                return;
+
+            if ($this->tipoComprobante() === 'recibo') {
+                return redirect()->route('facturas.boleta.imprimir', $factura->id);
             }
-            
-            // Redirigir a la vista de impresión
+
             return redirect()->route('facturas.imprimir', $factura->id);
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al imprimir factura: ' . $e->getMessage());
+            session()->flash('error', 'Error al imprimir: ' . $e->getMessage());
         }
     }
-    
+
     public function descargarPdf($facturaId)
     {
         try {
             $factura = \App\Models\Factura::find($facturaId);
-            
-            if (!$factura) {
-                session()->flash('error', 'Factura no encontrada');
+            if (!$factura || $factura->empresa_id !== Auth::user()->empresa_id) {
+                session()->flash('error', 'Factura no encontrada o sin permisos');
                 return;
             }
-            
-            // Verificar que el usuario tenga acceso a la factura
-            if ($factura->empresa_id !== Auth::user()->empresa_id) {
-                session()->flash('error', 'No tiene permisos para acceder a esta factura');
-                return;
+
+            if ($this->tipoComprobante() === 'recibo') {
+                return redirect()->route('facturas.boleta.pdf', $factura->id);
             }
-            
-            // Redirigir al PDF
+
             return redirect()->route('facturas.pdf', $factura->id);
         } catch (\Exception $e) {
             session()->flash('error', 'Error al generar PDF: ' . $e->getMessage());

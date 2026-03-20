@@ -98,6 +98,40 @@
                 </div>
             </div>
 
+            {{-- TIPO DE COMPROBANTE --}}
+            <div class="mb-6">
+                <h3 class="text-base font-semibold text-gray-800 mb-3">
+                    <i class="fas fa-file-alt mr-2 text-blue-600"></i>
+                    Tipo de comprobante para clientes
+                </h3>
+                <p class="text-sm text-gray-500 mb-3">Elige qué documento se genera al imprimir o ver PDF desde el módulo de facturas.</p>
+                <div class="grid grid-cols-2 gap-4 max-w-lg">
+                    <label class="cursor-pointer" wire:click="$set('tipo_comprobante', 'factura')">
+                        <div class="border-2 rounded-lg p-4 text-center transition-all
+                            {{ $tipo_comprobante === 'factura' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300' }}">
+                            <i class="fas fa-file-invoice text-2xl mb-2 {{ $tipo_comprobante === 'factura' ? 'text-blue-600' : 'text-gray-500' }}"></i>
+                            <div class="font-semibold text-gray-800">Factura</div>
+                            <div class="text-xs text-gray-500 mt-1">Formato de factura estándar</div>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer" wire:click="$set('tipo_comprobante', 'recibo')">
+                        <div class="border-2 rounded-lg p-4 text-center transition-all
+                            {{ $tipo_comprobante === 'recibo' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300' }}">
+                            <i class="fas fa-receipt text-2xl mb-2 {{ $tipo_comprobante === 'recibo' ? 'text-blue-600' : 'text-gray-500' }}"></i>
+                            <div class="font-semibold text-gray-800">Recibo</div>
+                            <div class="text-xs text-gray-500 mt-1">Usa la plantilla configurada en Config. Recibos</div>
+                        </div>
+                    </label>
+                </div>
+                @if($tipo_comprobante === 'recibo')
+                <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700 max-w-lg">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Se usará la plantilla configurada en <a href="{{ route('configuracion.recibos') }}" class="underline font-medium">Configuración de Recibos</a>.
+                    Solo aplica para facturas <strong>pagadas</strong> (que ya tengan un recibo generado).
+                </div>
+                @endif
+            </div>
+
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
                 <p class="text-sm text-yellow-800">
                     <i class="fas fa-exclamation-triangle mr-1"></i>
