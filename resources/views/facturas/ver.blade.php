@@ -137,17 +137,20 @@
                 <span>{{ number_format($factura->total, 0, ',', '.') }} Gs.</span>
             </div>
 
-            @php $totalPagado = $factura->pagos->sum('monto_pagado'); @endphp
+            @php
+                // "Ya pagado" = lo que realmente se descontó del total (no la suma cruda de pagos)
+                $totalPagado = $factura->total - $factura->saldo_pendiente;
+            @endphp
             @if($totalPagado > 0)
             <div class="flex justify-between text-green-700 font-medium">
                 <span>Ya pagado</span>
                 <span>- {{ number_format($totalPagado, 0, ',', '.') }} Gs.</span>
             </div>
+            @endif
             <div class="flex justify-between font-bold text-base border-t pt-2 mt-1 {{ $factura->saldo_pendiente > 0 ? 'text-red-700' : 'text-green-700' }}">
                 <span>{{ $factura->saldo_pendiente > 0 ? 'Saldo pendiente' : '✓ Factura cancelada' }}</span>
                 <span>{{ number_format($factura->saldo_pendiente, 0, ',', '.') }} Gs.</span>
             </div>
-            @endif
         </div>
 
         @if($otrasFacturas->count() > 0)
@@ -198,24 +201,34 @@
                 <tr class="text-xs text-gray-500 uppercase border-b">
                     <th class="text-left py-2">Fecha</th>
                     <th class="text-left py-2">Método</th>
-                    <th class="text-left py-2">Referencia</th>
-                    <th class="text-right py-2">Monto</th>
+                    <th class="text-left py-2">Ajustes</th>
+                    <th class="text-right py-2">Cobrado</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($factura->pagos as $pago)
                 <tr class="border-b border-gray-100">
                     <td class="py-2">{{ $pago->fecha_pago->format('d/m/Y') }}</td>
-                    <td class="py-2">{{ $pago->metodoPago->nombre ?? $pago->metodo_pago ?? '-' }}</td>
-                    <td class="py-2 text-gray-500">{{ $pago->referencia ?? '-' }}</td>
+                    <td class="py-2">{{ $pago->metodoPago->nombre ?? '-' }}</td>
+                    <td class="py-2 text-xs text-gray-500">
+                        @if(($pago->mora_exonerada ?? 0) > 0)
+                            <span class="text-orange-600">Mora exon.: {{ number_format($pago->mora_exonerada, 0, ',', '.') }} Gs.</span>
+                        @endif
+                        @if(($pago->descuento ?? 0) > 0)
+                            <span class="text-purple-600 ml-1">Desc. {{ $pago->porcentaje_descuento ?? 0 }}%: {{ number_format($pago->descuento, 0, ',', '.') }} Gs.</span>
+                        @endif
+                        @if(($pago->mora_exonerada ?? 0) == 0 && ($pago->descuento ?? 0) == 0)
+                            <span>-</span>
+                        @endif
+                    </td>
                     <td class="py-2 text-right font-medium text-green-700">{{ number_format($pago->monto_pagado, 0, ',', '.') }} Gs.</td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
         <div class="flex justify-between text-sm font-semibold mt-2 pt-2 border-t">
-            <span>Total pagado</span>
-            <span class="text-green-700">{{ number_format($factura->pagos->sum('monto_pagado'), 0, ',', '.') }} Gs.</span>
+            <span>Total cobrado</span>
+            <span class="text-green-700">{{ number_format($factura->total - $factura->saldo_pendiente, 0, ',', '.') }} Gs.</span>
         </div>
         @if($factura->saldo_pendiente > 0)
         <div class="flex justify-between text-sm font-semibold mt-1">

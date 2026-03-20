@@ -49,6 +49,12 @@
         Configuración
     </div>
 
+    @if(auth()->user()->tienePermiso('zonas'))
+    <x-nav-link href="{{ route('zonas.index') }}" :active="request()->routeIs('zonas.*')">
+        <i class="fas fa-map w-5 h-5 mr-3"></i> Zonas
+    </x-nav-link>
+    @endif
+
     @if(auth()->user()->tienePermiso('ciudades'))
     <x-nav-link href="{{ route('ciudades.index') }}" :active="request()->routeIs('ciudades.*')">
         <i class="fas fa-city w-5 h-5 mr-3"></i> Ciudades

@@ -324,12 +324,75 @@
                                 </div>
                             </div>
 
+                            <!-- Exoneración y Descuento -->
+                            @if(count($facturasSeleccionadas) > 0)
+                            <div class="mb-4 pb-4 border-b border-gray-200 space-y-3">
+                                <h4 class="font-medium text-gray-900">Ajustes</h4>
+
+                                {{-- Exonerar mora --}}
+                                @if($montoMoraTotal > 0)
+                                <div class="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-lg p-3">
+                                    <label class="flex items-center gap-2 cursor-pointer text-sm">
+                                        <input type="checkbox"
+                                               wire:model.live="exonerar_mora"
+                                               class="rounded border-gray-300 text-orange-500">
+                                        <span class="text-orange-700 font-medium">Exonerar mora</span>
+                                        <span class="text-orange-600 text-xs">({{ number_format($montoMoraTotal, 0, ',', '.') }} Gs.)</span>
+                                    </label>
+                                    @if($exonerar_mora)
+                                        <span class="text-xs text-green-600 font-semibold">-{{ number_format($montoMoraTotal, 0, ',', '.') }} Gs.</span>
+                                    @endif
+                                </div>
+                                @endif
+
+                                {{-- Descuento porcentual --}}
+                                <div class="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                                    <label class="block text-sm font-medium text-purple-700 mb-2">
+                                        Descuento (%)
+                                    </label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="number"
+                                               wire:model.live="porcentaje_descuento"
+                                               min="0" max="100" step="1"
+                                               placeholder="0"
+                                               class="w-20 border-gray-300 rounded text-sm text-center">
+                                        <span class="text-gray-500 text-sm">%</span>
+                                        @if($montoDescuento > 0)
+                                            <span class="ml-auto text-xs text-green-600 font-semibold">-{{ number_format($montoDescuento, 0, ',', '.') }} Gs.</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
                             <!-- Cálculos del Pago -->
                             <div class="space-y-3">
+                                {{-- Desglose si hay ajustes --}}
+                                @if($exonerar_mora && $montoMoraTotal > 0 || $montoDescuento > 0)
+                                <div class="text-xs space-y-1 bg-gray-50 rounded p-3">
+                                    <div class="flex justify-between text-gray-600">
+                                        <span>Subtotal facturas:</span>
+                                        <span>{{ number_format($montoTotal, 0, ',', '.') }} Gs.</span>
+                                    </div>
+                                    @if($exonerar_mora && $montoMoraTotal > 0)
+                                    <div class="flex justify-between text-orange-600">
+                                        <span>- Mora exonerada:</span>
+                                        <span>{{ number_format($montoMoraTotal, 0, ',', '.') }} Gs.</span>
+                                    </div>
+                                    @endif
+                                    @if($montoDescuento > 0)
+                                    <div class="flex justify-between text-purple-600">
+                                        <span>- Descuento {{ $porcentaje_descuento }}%:</span>
+                                        <span>{{ number_format($montoDescuento, 0, ',', '.') }} Gs.</span>
+                                    </div>
+                                    @endif
+                                </div>
+                                @endif
+
                                 <div class="bg-blue-50 p-3 rounded-lg border">
                                     <div class="flex justify-between items-center">
-                                        <span class="text-gray-700 font-medium">💰 Total a Pagar:</span>
-                                        <span class="font-bold text-xl text-blue-700">{{ number_format($montoTotal, 0, ',', '.') }} Gs.</span>
+                                        <span class="text-gray-700 font-medium">Total a Cobrar:</span>
+                                        <span class="font-bold text-xl text-blue-700">{{ number_format($montoFinal, 0, ',', '.') }} Gs.</span>
                                     </div>
                                 </div>
 
@@ -340,7 +403,7 @@
 
                                 @if(floatval($monto) > 0)
                                     <div class="flex justify-between text-sm">
-                                        <span class="text-gray-600">{{ $montoRestante < 0 ? '❌ Falta:' : ($montoRestante > 0 ? '💸 Vuelto a Dar:' : '✅ Exacto:') }}</span>
+                                        <span class="text-gray-600">{{ $montoRestante < 0 ? 'Falta:' : ($montoRestante > 0 ? 'Vuelto a Dar:' : 'Exacto:') }}</span>
                                         <span class="font-medium {{ $montoRestante < 0 ? 'text-red-600' : ($montoRestante > 0 ? 'text-green-600' : 'text-gray-600') }}">
                                             {{ number_format(abs($montoRestante), 0, ',', '.') }} Gs.
                                         </span>

@@ -176,7 +176,7 @@
                     <!-- Cobrador -->
                     <div>
                         <label for="cobrador_id" class="block text-sm font-medium text-gray-700 mb-2">
-                            Cobrador Asignado *
+                            Cobrador Asignado <span class="text-gray-400 font-normal">(opcional)</span>
                         </label>
                         <select wire:model.blur="cobrador_id" 
                                 id="cobrador_id" 

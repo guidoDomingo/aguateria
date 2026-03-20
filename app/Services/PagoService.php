@@ -70,62 +70,78 @@ class PagoService
                 // Generar número base para los recibos
                 $baseRecibo = $this->pagoRepository->siguienteNumeroRecibo();
 
+                $exonerarMora        = (bool) ($datos['exonerar_mora'] ?? false);
+                $porcentajeDescuento = floatval($datos['porcentaje_descuento'] ?? 0);
+                $totalFacturas       = count($datos['facturas']);
+
                 foreach ($datos['facturas'] as $index => $facturaData) {
-                    $factura = Factura::findOrFail($facturaData['factura_id']);
-                    $montoAAplicar = floatval($facturaData['monto']);
-                    
+                    $factura       = Factura::findOrFail($facturaData['factura_id']);
+                    $moraFactura   = floatval($facturaData['mora'] ?? 0);
+
+                    // 1. Exonerar mora si corresponde
+                    $moraExoneradaFactura = 0;
+                    if ($exonerarMora && $moraFactura > 0) {
+                        $moraExoneradaFactura = $moraFactura;
+                        $factura->mora            = 0;
+                        $factura->total          -= $moraFactura;
+                        $factura->saldo_pendiente -= $moraFactura;
+                        $factura->save();
+                    }
+
+                    // 2. Aplicar descuento porcentual sobre lo que resta
+                    $baseDesc = floatval($facturaData['monto']) - $moraExoneradaFactura;
+                    $descuentoFactura = round($baseDesc * ($porcentajeDescuento / 100), 0);
+                    if ($descuentoFactura > 0) {
+                        $factura->refresh();
+                        $factura->descuento       += $descuentoFactura;
+                        $factura->total           -= $descuentoFactura;
+                        $factura->saldo_pendiente -= $descuentoFactura;
+                        $factura->save();
+                    }
+
+                    // 3. Calcular monto real a aplicar
+                    $factura->refresh();
+                    $montoAAplicar = min($factura->saldo_pendiente, floatval($facturaData['monto']) - $moraExoneradaFactura - $descuentoFactura);
+
                     if ($montoAAplicar <= 0) continue;
-                    
-                    // Verificar que no exceda el saldo pendiente
-                    if ($montoAAplicar > $factura->saldo_pendiente) {
-                        $montoAAplicar = $factura->saldo_pendiente;
-                    }
-                    
-                    // Si hay múltiples facturas, generar números correlativos
-                    if ($index > 0) {
-                        $baseNumero = intval(substr($baseRecibo, 3));
-                        $numeroRecibo = 'REC' . str_pad($baseNumero + $index, 8, '0', STR_PAD_LEFT);
-                    } else {
-                        $numeroRecibo = $baseRecibo;
-                    }
+
+                    // Número de recibo correlativo
+                    $numeroRecibo = $index === 0 ? $baseRecibo
+                        : 'REC' . str_pad(intval(substr($baseRecibo, 3)) + $index, 8, '0', STR_PAD_LEFT);
 
                     // Crear el pago
                     $pago = Pago::create([
-                        'empresa_id' => $datos['empresa_id'],
-                        'cliente_id' => $datos['cliente_id'],
-                        'factura_id' => $factura->id,
-                        'metodo_pago_id' => $datos['metodo_pago_id'],
-                        'cobrador_id' => $datos['cobrador_id'],
-                        'monto_pagado' => $montoAAplicar,
-                        'fecha_pago' => $datos['fecha_pago'],
-                        'hora_pago' => now()->format('H:i:s'),
-                        'numero_recibo' => $numeroRecibo,
-                        'observaciones' => $datos['observaciones'],
-                        'estado' => 'confirmado',
-                        'user_id' => $userId,
+                        'empresa_id'          => $datos['empresa_id'],
+                        'cliente_id'          => $datos['cliente_id'],
+                        'factura_id'          => $factura->id,
+                        'metodo_pago_id'      => $datos['metodo_pago_id'],
+                        'cobrador_id'         => $datos['cobrador_id'],
+                        'monto_pagado'        => $montoAAplicar,
+                        'mora_exonerada'      => $moraExoneradaFactura,
+                        'descuento'           => $descuentoFactura,
+                        'porcentaje_descuento'=> $porcentajeDescuento,
+                        'fecha_pago'          => $datos['fecha_pago'],
+                        'hora_pago'           => now()->format('H:i:s'),
+                        'numero_recibo'       => $numeroRecibo,
+                        'observaciones'       => $datos['observaciones'],
+                        'estado'              => 'confirmado',
+                        'user_id'             => $userId,
                     ]);
 
-                    // Aplicar pago a la factura
                     $this->aplicarPagoAFactura($pago, $factura);
-
-                    // Generar recibo
                     $this->generarRecibo($pago);
 
-                    $pagosCreados[] = $pago;
+                    $pagosCreados[]    = $pago;
                     $facturasAfectadas[] = [
-                        'factura_id' => $factura->id,
-                        'numero_factura' => $factura->numero_factura,
-                        'monto_aplicado' => $montoAAplicar,
-                        'nuevo_estado' => $factura->fresh()->estado
+                        'factura_id'      => $factura->id,
+                        'numero_factura'  => $factura->numero_factura,
+                        'monto_aplicado'  => $montoAAplicar,
+                        'mora_exonerada'  => $moraExoneradaFactura,
+                        'descuento'       => $descuentoFactura,
+                        'nuevo_estado'    => $factura->fresh()->estado,
                     ];
 
                     $montoAsignado += $montoAAplicar;
-                }
-
-                // Verificar que el monto asignado coincida con el total
-                $diferencia = abs($montoTotal - $montoAsignado);
-                if ($diferencia > 0.01) { // Permitir diferencia mínima por redondeo
-                    throw new \Exception("El monto total ({$montoTotal}) no coincide con la suma de pagos asignados ({$montoAsignado})");
                 }
 
                 return [
@@ -264,24 +280,30 @@ class PagoService
         $empresa = $cliente->empresa;
 
         return Recibo::create([
-            'pago_id' => $pago->id,
-            'numero_recibo' => $pago->numero_recibo,
-            'cliente_nombre' => $cliente->nombre_completo,
-            'cliente_cedula' => $cliente->cedula,
-            'cliente_direccion' => $cliente->direccion,
-            'monto_pagado' => $pago->monto_pagado,
-            'fecha_pago' => $pago->fecha_pago,
-            'periodo_pagado' => $pago->factura ? $pago->factura->periodo->nombre : 'Pago general',
-            'metodo_pago' => $pago->metodoPago->nombre,
-            'referencia' => $pago->referencia,
-            'observaciones' => $pago->observaciones,
-            'datos_empresa' => [
-                'nombre' => $empresa->nombre,
+            'pago_id'          => $pago->id,
+            'numero_recibo'    => $pago->numero_recibo,
+            'cliente_nombre'   => $cliente->nombre_completo,
+            'cliente_cedula'   => $cliente->cedula,
+            'cliente_direccion'=> $cliente->direccion,
+            'monto_pagado'     => $pago->monto_pagado,
+            'fecha_pago'       => $pago->fecha_pago,
+            'periodo_pagado'   => $pago->factura ? ($pago->factura->periodo->nombre ?? 'Pago general') : 'Pago general',
+            'metodo_pago'      => $pago->metodoPago->nombre,
+            'referencia'       => $pago->referencia,
+            'observaciones'    => $pago->observaciones,
+            'datos_empresa'    => [
+                'nombre'    => $empresa->nombre,
                 'direccion' => $empresa->direccion,
-                'telefono' => $empresa->telefono,
-                'email' => $empresa->email,
-                'logo' => $empresa->logo
-            ]
+                'telefono'  => $empresa->telefono,
+                'email'     => $empresa->email,
+                'logo'      => $empresa->logo,
+            ],
+            'datos_descuento'  => [
+                'mora_exonerada'      => $pago->mora_exonerada ?? 0,
+                'descuento'           => $pago->descuento ?? 0,
+                'porcentaje_descuento'=> $pago->porcentaje_descuento ?? 0,
+                'subtotal_original'   => $pago->monto_pagado + ($pago->mora_exonerada ?? 0) + ($pago->descuento ?? 0),
+            ],
         ]);
     }
 

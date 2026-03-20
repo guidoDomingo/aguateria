@@ -22,12 +22,14 @@ class Recibo extends Model
         'referencia',
         'observaciones',
         'datos_empresa',
+        'datos_descuento',
     ];
 
     protected $casts = [
-        'monto_pagado' => 'decimal:2',
-        'fecha_pago' => 'date',
-        'datos_empresa' => 'array',
+        'monto_pagado'    => 'decimal:2',
+        'fecha_pago'      => 'date',
+        'datos_empresa'   => 'array',
+        'datos_descuento' => 'array',
     ];
 
     // Relaciones

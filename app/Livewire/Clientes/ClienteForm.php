@@ -100,7 +100,7 @@ class ClienteForm extends Component
             ],
             'direccion' => 'required|string|max:255',
             'barrio_id' => 'required|exists:barrios,id',
-            'cobrador_id' => 'required|exists:cobradores,id',
+            'cobrador_id' => 'nullable|exists:cobradores,id',
             'tarifa_id' => 'required|exists:tarifas,id',
             'descuento_especial' => 'numeric|min:0|max:100',
             'observaciones' => 'nullable|string|max:500',

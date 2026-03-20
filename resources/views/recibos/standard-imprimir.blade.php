@@ -293,7 +293,30 @@
         </div>
         @endif
 
+                @php
+            $dd = $recibo->datos_descuento ?? [];
+            $moraExon  = floatval($dd["mora_exonerada"] ?? 0);
+            $descuento = floatval($dd["descuento"] ?? 0);
+            $porcDesc  = floatval($dd["porcentaje_descuento"] ?? 0);
+            $subtotalOrig = floatval($dd["subtotal_original"] ?? $recibo->pago->monto_pagado);
+        @endphp
         <div class="total-section">
+            @if($moraExon > 0 || $descuento > 0)
+            <div style="font-size:10px;color:#666;display:flex;justify-content:space-between;">
+                <span>Subtotal:</span><span>Gs. {{ number_format($subtotalOrig, 0, ",", ".") }}</span>
+            </div>
+            @if($moraExon > 0)
+            <div style="font-size:10px;color:#d97706;display:flex;justify-content:space-between;">
+                <span>Mora exonerada:</span><span>- Gs. {{ number_format($moraExon, 0, ",", ".") }}</span>
+            </div>
+            @endif
+            @if($descuento > 0)
+            <div style="font-size:10px;color:#7c3aed;display:flex;justify-content:space-between;">
+                <span>Descuento {{ $porcDesc > 0 ? $porcDesc."%%" : "" }}:</span><span>- Gs. {{ number_format($descuento, 0, ",", ".") }}</span>
+            </div>
+            @endif
+            @endif
+            
             <div class="total-row">
                 <span>TOTAL PAGADO:</span>
                 <span>Gs. {{ number_format($recibo->pago->monto_pagado, 0, ',', '.') }}</span>

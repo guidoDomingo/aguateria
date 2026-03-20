@@ -152,22 +152,6 @@
                             @enderror
                         </div>
 
-                        <!-- Usuario del Sistema -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Usuario del Sistema
-                            </label>
-                            <select wire:model="user_id" 
-                                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('user_id') border-red-500 @enderror">
-                                <option value="">Sin usuario asignado</option>
-                                @foreach($usuarios as $usuario)
-                                    <option value="{{ $usuario->id }}">{{ $usuario->name }} ({{ $usuario->email }})</option>
-                                @endforeach
-                            </select>
-                            @error('user_id')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
 
                         <!-- Comisión Porcentaje -->
                         <div>
