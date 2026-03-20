@@ -13,7 +13,14 @@
       "Bash(php -r \"echo extension_loaded\\(''gd''\\) ? ''GD OK'' : ''NO GD''; echo '' | ''; echo extension_loaded\\(''imagick''\\) ? ''Imagick OK'' : ''NO Imagick'';\")",
       "Bash(composer require:*)",
       "Bash(grep -n \"fillable\\\\|protected $casts\" c:/laragon/www/aguateria/app/Models/Recibo.php)",
-      "Bash(head -5 grep -n \"TOTAL PAGADO\\\\|total-section\\\\|total-amount\" c:/laragon/www/aguateria/resources/views/recibos/minimal-pdf.blade.php)"
+      "Bash(head -5 grep -n \"TOTAL PAGADO\\\\|total-section\\\\|total-amount\" c:/laragon/www/aguateria/resources/views/recibos/minimal-pdf.blade.php)",
+      "Bash(php -l /c/laragon/www/aguateria/app/Helpers/NumeroEnLetras.php)",
+      "Bash(php -l /c/laragon/www/aguateria/app/Http/Controllers/ReciboController.php)",
+      "Bash(php -l /c/laragon/www/aguateria/app/Models/ConfiguracionRecibo.php)",
+      "Bash(php -l /c/laragon/www/aguateria/app/Livewire/Configuracion/ConfiguracionRecibos.php)",
+      "Bash(php -r \":*)",
+      "Bash(php -r \"require ''c:/laragon/www/aguateria/vendor/autoload.php''; echo App\\\\Helpers\\\\NumeroEnLetras::convertir\\(20000\\) . ''\\\\n''; echo App\\\\Helpers\\\\NumeroEnLetras::convertir\\(150500\\) . ''\\\\n'';\")",
+      "Bash(ls c:/laragon/www/aguateria/resources/views/recibos/recibo-dinero*)"
     ]
   }
 }

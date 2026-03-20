@@ -297,6 +297,8 @@ class PagoService
                 'telefono'  => $empresa->telefono,
                 'email'     => $empresa->email,
                 'logo'      => $empresa->logo,
+                'ciudad'    => $empresa->ciudad,
+                'pais'      => $empresa->pais ?? 'Paraguay',
             ],
             'datos_descuento'  => [
                 'mora_exonerada'      => $pago->mora_exonerada ?? 0,

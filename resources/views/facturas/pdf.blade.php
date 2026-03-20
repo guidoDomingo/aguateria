@@ -166,7 +166,7 @@
                 @endforeach
                 <tr style="font-weight:bold;background:#f0fdf4">
                     <td colspan="3" style="text-align:right">Total pagado:</td>
-                    <td class="r" style="color:#16a34a">{{ number_format($factura->pagos->sum('monto_pagado'), 0, ',', '.') }} Gs.</td>
+                    <td class="r" style="color:#16a34a">{{ number_format($factura->total - $factura->saldo_pendiente, 0, ',', '.') }} Gs.</td>
                 </tr>
                 @if($factura->saldo_pendiente > 0)
                 <tr style="font-weight:bold;background:#fff7f7">

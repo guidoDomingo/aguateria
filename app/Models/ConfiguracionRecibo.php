@@ -126,10 +126,11 @@ class ConfiguracionRecibo extends Model
     public function getPlantillas()
     {
         return [
-            'standard' => 'Estándar',
-            'modern' => 'Moderno',
-            'classic' => 'Clásico',
-            'minimal' => 'Minimalista'
+            'standard'      => 'Estándar',
+            'modern'        => 'Moderno',
+            'classic'       => 'Clásico',
+            'minimal'       => 'Minimalista',
+            'recibo_dinero' => 'Recibo de Dinero (Paraguayo)',
         ];
     }
 

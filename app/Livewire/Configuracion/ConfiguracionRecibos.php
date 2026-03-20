@@ -50,7 +50,7 @@ class ConfiguracionRecibos extends Component
         'ancho_personalizado'    => 'nullable|integer|min:50|max:500',
         'alto_personalizado'     => 'nullable|integer|min:100|max:1000',
         'orientacion'            => 'required|in:portrait,landscape',
-        'plantilla'              => 'required|in:standard,modern,classic,minimal',
+        'plantilla'              => 'required|in:standard,modern,classic,minimal,recibo_dinero',
         'fuente'                 => 'required|in:Arial,Times,Courier',
         'tamaño_fuente'          => 'required|integer|min:8|max:24',
         'posicion_logo'          => 'required|in:left,center,right',

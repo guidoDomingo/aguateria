@@ -113,7 +113,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-gray-700 mb-2">Plantilla</label>
                     <div class="grid grid-cols-2 gap-2">
-                        @foreach(['standard'=>'Estándar','modern'=>'Moderno','classic'=>'Clásico','minimal'=>'Minimalista'] as $val=>$lbl)
+                        @foreach(['standard'=>'Estándar','modern'=>'Moderno','classic'=>'Clásico','minimal'=>'Minimalista','recibo_dinero'=>'Recibo de Dinero (Paraguayo)'] as $val=>$lbl)
                         <button wire:click="$set('plantilla','{{ $val }}')" type="button"
                             class="py-2 border-2 rounded-lg text-xs font-medium transition-all
                             {{ $plantilla===$val ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 hover:border-gray-300 text-gray-600' }}">

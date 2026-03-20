@@ -68,6 +68,8 @@ class ReciboController extends Controller
                 return "recibos.classic{$sufijo}";
             case 'minimal':
                 return "recibos.minimal{$sufijo}";
+            case 'recibo_dinero':
+                return "recibos.recibo-dinero{$sufijo}";
             default:
                 return "recibos.standard{$sufijo}";
         }
