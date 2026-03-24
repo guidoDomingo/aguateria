@@ -159,7 +159,7 @@ class ClienteForm extends Component
                 'email' => $this->email ?: null,
                 'direccion' => $this->direccion,
                 'barrio_id' => $this->barrio_id,
-                'cobrador_id' => $this->cobrador_id,
+                'cobrador_id' => $this->cobrador_id ?: null,
                 'tarifa_id' => $this->tarifa_id,
                 'descuento_especial' => $this->descuento_especial,
                 'observaciones' => $this->observaciones ?: null,
