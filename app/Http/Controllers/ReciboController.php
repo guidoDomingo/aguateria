@@ -15,33 +15,34 @@ class ReciboController extends Controller
     public function generarPdf($reciboId)
     {
         $recibo = Recibo::with(['pago', 'pago.cliente', 'pago.metodoPago', 'pago.cobrador'])->findOrFail($reciboId);
-        
+
         // Verificar que el usuario tenga acceso al recibo
-        if ($recibo->pago->empresa_id !== auth()->user()->empresa_id) {
+        $empresaId = $recibo->pago?->empresa_id ?? auth()->user()->empresa_id;
+        if ($recibo->pago && $recibo->pago->empresa_id !== auth()->user()->empresa_id) {
             abort(403, 'No tiene permisos para acceder a este recibo');
         }
 
         // Obtener configuración personalizada
         $configuracion = ConfiguracionRecibo::getConfiguracionParaEmpresa(auth()->user()->empresa_id);
-        
+
         // Seleccionar la plantilla según configuración
         $plantilla = $this->getPlantillaRecibo($configuracion->plantilla);
-        
+
         $html = view($plantilla, compact('recibo', 'configuracion'))->render();
-        
+
         // Generar respuesta según configuración de tamaño
         return $this->generarRespuestaPdf($html, $recibo, $configuracion);
     }
-    
+
     /**
      * Imprimir recibo (versión para impresión)
      */
     public function imprimir($reciboId)
     {
         $recibo = Recibo::with(['pago', 'pago.cliente', 'pago.metodoPago', 'pago.cobrador'])->findOrFail($reciboId);
-        
+
         // Verificar que el usuario tenga acceso al recibo
-        if ($recibo->pago->empresa_id !== auth()->user()->empresa_id) {
+        if ($recibo->pago && $recibo->pago->empresa_id !== auth()->user()->empresa_id) {
             abort(403, 'No tiene permisos para acceder a este recibo');
         }
 

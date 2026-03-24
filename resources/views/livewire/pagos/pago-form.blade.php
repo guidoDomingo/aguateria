@@ -267,6 +267,19 @@
                                         </tr>
                                     @endforeach
                                 </tbody>
+                                <tfoot>
+                                    <tr class="bg-gray-50 border-t-2 border-gray-300">
+                                        <td colspan="4" class="px-4 py-3 text-right text-sm font-bold text-gray-700">
+                                            Total deuda pendiente:
+                                        </td>
+                                        <td class="px-4 py-3 text-right">
+                                            @php $totalPendiente = collect($facturasCliente)->sum('pendiente'); @endphp
+                                            <span class="text-base font-bold text-red-700">
+                                                {{ number_format($totalPendiente, 0, ',', '.') }} Gs.
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>

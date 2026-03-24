@@ -67,7 +67,8 @@ class Pago extends Model
 
     public function recibo()
     {
-        return $this->hasOne(Recibo::class);
+        return $this->hasOne(Recibo::class, 'numero_recibo', 'numero_recibo')
+            ->latest('id');
     }
 
     // Scopes

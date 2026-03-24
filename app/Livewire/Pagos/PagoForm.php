@@ -28,8 +28,8 @@ class PagoForm extends Component
     public $montoRestante = 0;
 
     // Exoneración y descuento
-    public bool $exonerar_mora = false;
-    public float $porcentaje_descuento = 0;
+    public $exonerar_mora = false;
+    public $porcentaje_descuento = 0;
     public float $montoMoraTotal = 0;
     public float $montoDescuento = 0;
     public float $montoFinal = 0;
@@ -192,7 +192,7 @@ class PagoForm extends Component
         $baseDescuento = $this->exonerar_mora ? ($subtotal - $moraTotal) : $subtotal;
 
         // Aplicar descuento porcentual
-        $this->montoDescuento = round($baseDescuento * ($this->porcentaje_descuento / 100), 0);
+        $this->montoDescuento = round($baseDescuento * ((float)$this->porcentaje_descuento / 100), 0);
         $this->montoFinal     = $baseDescuento - $this->montoDescuento;
 
         $this->montoRestante = floatval($this->monto) - $this->montoFinal;
